@@ -33,7 +33,7 @@ class AboutScreen extends ConsumerWidget {
             child: Column(
               children: [
                 Text(
-                  context.localization.appTitle,
+                  'CorrentPod',
                   style: CupertinoTheme.of(context).textTheme.textStyle
                       .copyWith(
                         fontSize: 20,
@@ -62,6 +62,10 @@ class AboutScreen extends ConsumerWidget {
                 AboutListTile(
                   titleText: context.localization.madeWithLoveTitle,
                   valueText: "Aditya",
+                ),
+                const AboutListTile(
+                  titleText: "Fork by",
+                  valueText: "Correntable",
                 ),
               ],
             ),
