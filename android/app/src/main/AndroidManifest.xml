@@ -22,7 +22,6 @@
             android:name="com.ryanheise.audioservice.AudioServiceActivity"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
-            android:name="MainActiviry"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""
