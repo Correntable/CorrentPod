@@ -15,11 +15,11 @@ jobs:
           java-version: 17
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.47.6
+          flutter-version-file: pubspec.yaml
           channel: stable
       - name: Create signing key
         run: |
-          keytool -genkey -v -keystore $HOME/release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias key -storepass android123 -keypass android123 -dname "CN=Classipod"
+          keytool -genkey -keystore $HOME/release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias key -storepass android123 -keypass android123 -dname "CN=Classipod"
           cat > android/key.properties <<EOF
           storePassword=android123
           keyPassword=android123
@@ -27,8 +27,8 @@ jobs:
           storeFile=$HOME/release.jks
           EOF
       - run: flutter pub get
-      - run: flutter build apk --release
+      - run: flutter build apk --release --flavor dev
       - uses: actions/upload-artifact@v4
         with:
           name: classipod-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/*.apk
