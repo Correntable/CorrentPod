@@ -63,12 +63,12 @@ android {
     productFlavors {
         create("production") {
             dimension = "default"
-            resValue("string", "app_name", "Classipod")
+            resValue("string", "app_name", "CorrentPod")
             applicationIdSuffix = ""
         }
         create("dev") {
             dimension = "default"
-            resValue("string", "app_name", "Classipod Dev")
+            resValue("string", "app_name", "CorrentPod Dev")
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
         }
