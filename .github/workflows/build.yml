@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [master]
-    
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,6 +17,15 @@ jobs:
         with:
           flutter-version: 3.47.6
           channel: stable
+      - name: Create signing key
+        run: |
+          keytool -genkey -v -keystore $HOME/release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias key -storepass android123 -keypass android123 -dname "CN=Classipod"
+          cat > android/key.properties <<EOF
+          storePassword=android123
+          keyPassword=android123
+          keyAlias=key
+          storeFile=$HOME/release.jks
+          EOF
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
