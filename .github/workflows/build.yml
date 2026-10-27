@@ -3,6 +3,11 @@ on:
   workflow_dispatch:
   push:
     branches: [master]
+    paths-ignore:
+      - '**.md'
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -28,7 +33,13 @@ jobs:
           EOF
       - run: flutter pub get
       - run: flutter build apk --release --flavor dev
-      - uses: actions/upload-artifact@v4
-        with:
-          name: classipod-apk
-          path: build/app/outputs/flutter-apk/*.apk
+      - name: Rename APK
+        run: cp "$(ls build/app/outputs/flutter-apk/*-release.apk | head -n 1)" CorrentPod.apk
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "build-${{ github.run_number }}" CorrentPod.apk \
+            --title "CorrentPod build ${{ github.run_number }}" \
+            --generate-notes \
+            --target "${{ github.sha }}"
