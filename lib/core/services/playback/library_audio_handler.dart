@@ -74,6 +74,8 @@ class LibraryAudioHandler extends BaseAudioHandler {
   bool _sourceLoaded = false;
   int _sourceVersion = 0;
   final LogicalQueue logicalQueue = LogicalQueue();
+  final List<String> _upNext = [];
+  int? _contextIndex;
   final StreamController<int?> _indices = StreamController.broadcast();
   final List<StreamSubscription<dynamic>> _subscriptions = [];
   List<MusicMetadata> _songs = [];
@@ -116,7 +118,7 @@ class LibraryAudioHandler extends BaseAudioHandler {
                   player.processingState != ProcessingState.completed) {
                 return;
               }
-              final next = logicalQueue.next(automatic: true);
+              final next = _nextIndex(automatic: true);
               if (next == null) {
                 await player.pause();
               } else {
@@ -171,6 +173,8 @@ class LibraryAudioHandler extends BaseAudioHandler {
 
   Future<void> setSongs(List<MusicMetadata> songs, {bool preload = true}) {
     _restoredSongPending = false;
+    _upNext.clear();
+    _contextIndex = null;
     _interruptSeek();
     _wantPlayback = false;
     _cancelRecovery();
@@ -212,7 +216,12 @@ class LibraryAudioHandler extends BaseAudioHandler {
     });
   }
 
-  Future<void> select(int index, {bool startPlaying = true}) {
+  Future<void> select(
+    int index, {
+    bool startPlaying = true,
+    bool keepQueue = false,
+  }) {
+    if (!keepQueue) _contextIndex = null;
     _restoredSongPending = false;
     if (index < 0 || index >= _songs.length) return Future.value();
     _interruptSeek();
@@ -243,6 +252,7 @@ class LibraryAudioHandler extends BaseAudioHandler {
       await player.stop();
     }
     await _serialize(() async {
+      _contextIndex = null;
       final identity = _songs.isEmpty
           ? null
           : _songs[logicalQueue.index].identity;
@@ -419,10 +429,10 @@ class LibraryAudioHandler extends BaseAudioHandler {
 
   @override
   Future<void> skipToNext() {
-    final next = logicalQueue.next();
+    final next = _nextIndex();
     return next == null
         ? Future.value()
-        : select(next, startPlaying: _wantPlayback);
+        : select(next, startPlaying: _wantPlayback, keepQueue: true);
   }
 
   @override
@@ -430,6 +440,11 @@ class LibraryAudioHandler extends BaseAudioHandler {
     if ((_sourceLoaded && !_recovering ? player.position : displayPosition) >
         const Duration(seconds: 3)) {
       return seek(Duration.zero);
+    }
+    final context = _contextIndex;
+    if (context != null) {
+      _contextIndex = null;
+      return select(context, startPlaying: _wantPlayback, keepQueue: true);
     }
     final previous = logicalQueue.previous();
     return previous == null
@@ -439,6 +454,37 @@ class LibraryAudioHandler extends BaseAudioHandler {
 
   @override
   Future<void> skipToQueueItem(int index) => select(index);
+
+  Future<void> appendSong(MusicMetadata song) => _serialize(() async {
+    _songs = List.unmodifiable([..._songs, song]);
+    logicalQueue.addSong(_songs.length - 1);
+    _broadcast();
+  });
+
+  void enqueue(MusicMetadata song, {bool playNext = false}) {
+    if (playNext) {
+      _upNext.insert(0, song.identity);
+    } else {
+      _upNext.add(song.identity);
+    }
+  }
+
+  int? _nextIndex({bool automatic = false}) {
+    if (automatic && logicalQueue.loopMode == LoopMode.one) {
+      return logicalQueue.index;
+    }
+    while (_upNext.isNotEmpty) {
+      final identity = _upNext.removeAt(0);
+      final index = _songs.indexWhere((s) => s.identity == identity);
+      if (index >= 0) {
+        _contextIndex ??= logicalQueue.index;
+        return index;
+      }
+    }
+    final context = _contextIndex;
+    _contextIndex = null;
+    return logicalQueue.next(automatic: automatic, from: context);
+  }
 
   @override
   Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {
