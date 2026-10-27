@@ -36,6 +36,7 @@ jobs:
       - name: Rename APK
         run: cp "$(ls build/app/outputs/flutter-apk/*-release.apk | head -n 1)" CorrentPod.apk
       - name: Publish release
+        if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
