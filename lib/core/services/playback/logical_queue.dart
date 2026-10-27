@@ -61,12 +61,19 @@ class LogicalQueue {
     }
   }
 
-  int? next({bool automatic = false}) {
+  int? next({bool automatic = false, int? from}) {
     if (_order.isEmpty) return null;
-    if (automatic && loopMode == LoopMode.one) return index;
-    final position = _positions[index] + 1;
+    final current = from ?? index;
+    if (automatic && loopMode == LoopMode.one) return current;
+    final position = _positions[current] + 1;
     if (position < length) return _order[position];
     return loopMode == LoopMode.all ? _order.first : null;
+  }
+
+  void addSong(int songIndex) {
+    _order.add(songIndex);
+    _albums.add([songIndex]);
+    _indexPositions();
   }
 
   int? previous() {
