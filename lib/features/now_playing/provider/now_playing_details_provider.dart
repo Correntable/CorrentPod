@@ -118,6 +118,10 @@ class NowPlayingDetailsNotifier extends Notifier<NowPlayingModel> {
     );
   }
 
+  void appendMetadata(MusicMetadata song) {
+    state = state.copyWith(metadataList: [...state.metadataList, song]);
+  }
+    
   void setNewMetadataList({
     NowPlayingType? nowPlayingType,
     required List<MusicMetadata> newMetadataList,
