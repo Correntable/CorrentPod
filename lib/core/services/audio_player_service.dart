@@ -288,19 +288,11 @@ class AudioPlayerServiceNotifier extends AsyncNotifier<void> {
     bool playNext = false,
   }) async {
     if (songs.isEmpty) return;
-    final handler = ref.read(libraryAudioHandlerProvider);
-    final now = ref.read(nowPlayingDetailsProvider);
-    if (now.metadataList.isEmpty) return;
-    final known = now.metadataList.map((s) => s.identity).toSet();
-    final missing = <MusicMetadata>[
-      for (final song in songs)
-        if (known.add(song.identity)) song,
-    ];
-    if (missing.isNotEmpty) {
-      ref.read(nowPlayingDetailsProvider.notifier).appendMetadataList(missing);
-      await handler.appendSongs(missing);
-    }
-    handler.enqueue(songs, playNext: playNext);
+    if (ref.read(nowPlayingDetailsProvider).metadataList.isEmpty) return;
+    ref.read(nowPlayingDetailsProvider.notifier).appendMetadataList(songs);
+    await ref
+        .read(libraryAudioHandlerProvider)
+        .enqueueSongs(songs, playNext: playNext);
   }
 
   Future<void> seekBackwards() async {
