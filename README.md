@@ -13,7 +13,7 @@ I'm not a developer so I'm doing everything with Claude and for Android only. I'
 
 Lock screen persistence needs Android 8.1 or newer.
 
-## 📥 Download
+Download
 
 Download the latest APK from the [Releases page](../../releases/latest), or directly:
 [CorrentPod.apk](https://github.com/Correntable/CorrentPod/releases/latest/download/CorrentPod.apk)
@@ -21,18 +21,7 @@ Download the latest APK from the [Releases page](../../releases/latest), or dire
 Notes:
 
 - The build uses the `dev` flavor, so it installs **next to** the original Classipod without replacing it.
-- The signing key is generated fresh on every build. To install a newer build, **uninstall the previous CorrentPod first**.
 - If playback stops in the background, exclude the app from battery optimization.
-
-## 🛠️ Build it yourself
-
-CorrentPod is a Flutter app. To build locally:
-
-1. Install Flutter **3.47.6** (the exact version required by `pubspec.yaml`) and the Android SDK.
-2. Run `flutter pub get`.
-3. Run `flutter build apk --release --flavor dev`.
-
-Release signing expects an `android/key.properties` file. The workflow in `.github/workflows/build.yml` shows how to generate a throwaway key.
 
 ## 🎶 Features
 
