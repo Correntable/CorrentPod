@@ -283,16 +283,18 @@ class AudioPlayerServiceNotifier extends AsyncNotifier<void> {
   Future<void> enqueueSong(MusicMetadata song, {bool playNext = false}) =>
       enqueueSongs([song], playNext: playNext);
 
-  Future<void> enqueueSongs(
+    Future<void> enqueueSongs(
     List<MusicMetadata> songs, {
     bool playNext = false,
   }) async {
     if (songs.isEmpty) return;
     if (ref.read(nowPlayingDetailsProvider).metadataList.isEmpty) return;
-    ref.read(nowPlayingDetailsProvider.notifier).appendMetadataList(songs);
-    await ref
+    final added = await ref
         .read(libraryAudioHandlerProvider)
         .enqueueSongs(songs, playNext: playNext);
+    if (added.isNotEmpty) {
+      ref.read(nowPlayingDetailsProvider.notifier).appendMetadataList(added);
+    }
   }
 
     Future<void> nextSong() async {
