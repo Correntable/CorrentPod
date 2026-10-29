@@ -102,28 +102,35 @@ class LogicalQueue {
     return true;
   }
 
-  void setShuffle(PlaybackShuffleMode mode) {
-    if (shuffleMode == mode) return;
+  /// First song of the regular order.
+  int? get first => _order.isEmpty ? null : _order.first;
+
+  void setShuffle(
+    PlaybackShuffleMode mode, {
+    bool keepCurrent = true,
+    bool force = false,
+  }) {
+    if (shuffleMode == mode && !force) return;
     shuffleMode = mode;
-    _reorder();
+    _reorder(keepCurrent: keepCurrent);
   }
 
   int? get _contextCurrent => _order.contains(index) ? index : anchor;
 
-  void _reorder() {
+  void _reorder({bool keepCurrent = true}) {
     _insertedAt.clear();
     switch (shuffleMode) {
       case PlaybackShuffleMode.off:
         _order.sort();
       case PlaybackShuffleMode.songs:
         _order.shuffle(random);
-        final current = _contextCurrent;
+        final current = keepCurrent ? _contextCurrent : null;
         if (current != null && _order.remove(current)) {
           _order.insert(0, current);
         }
       case PlaybackShuffleMode.albums:
         final albums = _albums.toList()..shuffle(random);
-        final current = _contextCurrent;
+        final current = keepCurrent ? _contextCurrent : null;
         final currentAlbum = current == null
             ? -1
             : albums.indexWhere((album) => album.contains(current));
