@@ -6,14 +6,12 @@ CorrentPod is a personal fork of [Classipod](https://github.com/adeeteya/Classip
 
 > **Unofficial fork.** This project is not affiliated with, endorsed by, or supported by the original author. All credit for the app itself goes to [Aditya R](https://github.com/adeeteya).
 
-## ✨ What's different from Classipod
+I'm not a developer so I'm doing everything with Claude and for Android only. I'm trying to add some features that may improve the great experience we can already have with ClassiPod. Here's a list of the main features (done or in backlog):
 
-| Change | Details |
-|--------|---------|
-| 🔒 **Lock screen persistence** | The app can show above the lock screen. Press the power button while playing, wake the screen, and CorrentPod is already there, much like Google Maps during navigation. Your PIN or fingerprint still protects the rest of the phone. |
-| 🏷️ **Rebranding** | The app name, the About screen, the menu preview and the playback notification now say **CorrentPod**. |
-| 📝 **Colophon** | The About screen credits both the original author and this fork. |
-| 🤖 **Automated builds** | A GitHub Actions workflow builds a ready-to-install Android APK on every push. |
+- When the app is open and you lock the device, when you press the power button or any other method to wake up the screen, the app is already there, ready to be used. Everything else remains locked beneath the app. If the app was not open and you lock the phone, when tapping from the lockscreen on the Media Control Notification, the app will popup without unlocking. (DONE)
+- "Play Next" and "Add to queue" feature, both for single songs and albums, with enhanced management of the index of the songs of the queue. (DONE)
+- 
+- 
 
 Lock screen persistence needs Android 8.1 or newer.
 
