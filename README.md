@@ -1,14 +1,6 @@
 <div align="center">
 
-# 🎵 CorrentPod
-
-**An iPod Classic-inspired music player for Android, with lock screen persistence.**
-
-![Screenshots](screenshots/combined.jpg)
-
-<sub>Screenshots are from the original project and still show the original branding.</sub>
-
-</div>
+#CorrentPod
 
 CorrentPod is a personal fork of [Classipod](https://github.com/adeeteya/Classipod) by Aditya R. It keeps everything that makes the original great: a click wheel interface, Cover Flow, local music playback and Subsonic/Navidrome streaming. On top of that, it adds a few tweaks of its own.
 
