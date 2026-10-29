@@ -27,9 +27,8 @@ Lock screen persistence needs Android 8.1 or newer.
 
 ## 📥 Download
 
-1. Open the **[Actions](../../actions)** tab and pick the latest successful **Build APK** run.
-2. Scroll to **Artifacts** and download `classipod-apk`.
-3. Unzip it and install `app-dev-release.apk`. Android will ask you to allow installs from unknown sources.
+Download the latest APK from the [Releases page](../../releases/latest), or directly:
+[CorrentPod.apk](https://github.com/Correntable/CorrentPod/releases/latest/download/CorrentPod.apk)
 
 Notes:
 
