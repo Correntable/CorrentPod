@@ -295,6 +295,12 @@ class AudioPlayerServiceNotifier extends AsyncNotifier<void> {
         .enqueueSongs(songs, playNext: playNext);
   }
 
+    Future<void> nextSong() async {
+    state = await AsyncValue.guard(
+      () => ref.read(libraryAudioHandlerProvider).skipToNext(),
+    );
+  }
+  
   Future<void> seekBackwards() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
