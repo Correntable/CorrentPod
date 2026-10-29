@@ -457,19 +457,49 @@ class LibraryAudioHandler extends BaseAudioHandler {
   @override
   Future<void> skipToQueueItem(int index) => select(index);
   
-  Future<void> enqueueSongs(
+  Future<List<MusicMetadata>> enqueueSongs(
     List<MusicMetadata> songs, {
     bool playNext = false,
-  }) => _serialize(() async {
-    _songs = List.unmodifiable([..._songs, ...songs]);
-    final indices = [for (final _ in songs) logicalQueue.addExtra()];
-    if (playNext) {
-      _upNext.insertAll(0, indices);
-    } else {
-      _upNext.addAll(indices);
-    }
-    _broadcast();
-  });
+  }) async {
+    final added = <MusicMetadata>[];
+    await _serialize(() async {
+      final indices = <int>[];
+      for (final song in songs) {
+        // Already queued: move it.
+        final queued = _upNext.indexWhere(
+          (i) => _songs[i].identity == song.identity,
+        );
+        if (queued >= 0) {
+          indices.add(_upNext.removeAt(queued));
+          continue;
+        }
+        // Still to be played in the regular order: take it out from there.
+        var found = -1;
+        for (final i in logicalQueue.upcoming) {
+          if (_songs[i].identity == song.identity) {
+            found = i;
+            break;
+          }
+        }
+        if (found >= 0) {
+          logicalQueue.removeFromOrder(found);
+          indices.add(found);
+        } else {
+          // Not in the queue (or already played): add it as a new entry.
+          _songs = List.unmodifiable([..._songs, song]);
+          indices.add(logicalQueue.addExtra());
+          added.add(song);
+        }
+      }
+      if (playNext) {
+        _upNext.insertAll(0, indices);
+      } else {
+        _upNext.addAll(indices);
+      }
+      _broadcast();
+    });
+    return added;
+  }
 
   int? _nextIndex({bool automatic = false}) {
     if (automatic && logicalQueue.loopMode == LoopMode.one) {
