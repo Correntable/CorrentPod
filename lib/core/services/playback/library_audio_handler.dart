@@ -74,7 +74,7 @@ class LibraryAudioHandler extends BaseAudioHandler {
   bool _sourceLoaded = false;
   int _sourceVersion = 0;
   final LogicalQueue logicalQueue = LogicalQueue();
-  final List<String> _upNext = [];
+  final List<int> _upNext = [];
   int? get _contextIndex => logicalQueue.anchor;
   set _contextIndex(int? value) => logicalQueue.anchor = value;
   final StreamController<int?> _indices = StreamController.broadcast();
@@ -252,8 +252,9 @@ class LibraryAudioHandler extends BaseAudioHandler {
       _sourceVersion++;
       await player.stop();
     }
-    await _serialize(() async {
+      await _serialize(() async {
       _contextIndex = null;
+      _upNext.clear();
       final identity = _songs.isEmpty
           ? null
           : _songs[logicalQueue.index].identity;
@@ -456,34 +457,29 @@ class LibraryAudioHandler extends BaseAudioHandler {
   @override
   Future<void> skipToQueueItem(int index) => select(index);
   
-  Future<void> appendSongs(List<MusicMetadata> songs) => _serialize(() async {
+  Future<void> enqueueSongs(
+    List<MusicMetadata> songs, {
+    bool playNext = false,
+  }) => _serialize(() async {
     _songs = List.unmodifiable([..._songs, ...songs]);
-    for (final _ in songs) {
-      logicalQueue.addExtra();
+    final indices = [for (final _ in songs) logicalQueue.addExtra()];
+    if (playNext) {
+      _upNext.insertAll(0, indices);
+    } else {
+      _upNext.addAll(indices);
     }
     _broadcast();
   });
-
-  void enqueue(List<MusicMetadata> songs, {bool playNext = false}) {
-    final identities = songs.map((song) => song.identity).toList();
-    if (playNext) {
-      _upNext.insertAll(0, identities);
-    } else {
-      _upNext.addAll(identities);
-    }
-  }
 
   int? _nextIndex({bool automatic = false}) {
     if (automatic && logicalQueue.loopMode == LoopMode.one) {
       return logicalQueue.index;
     }
-    while (_upNext.isNotEmpty) {
-      final identity = _upNext.removeAt(0);
-      final index = _songs.indexWhere((s) => s.identity == identity);
-      if (index >= 0) {
-        _contextIndex ??= logicalQueue.index;
-        return index;
-      }
+    if (_upNext.isNotEmpty) {
+      final index = _upNext.removeAt(0);
+      _contextIndex ??= logicalQueue.index;
+      logicalQueue.recordExtra();
+      return index;
     }
     final context = _contextIndex;
     _contextIndex = null;
