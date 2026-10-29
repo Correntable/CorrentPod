@@ -22,25 +22,38 @@ jobs:
         with:
           flutter-version-file: pubspec.yaml
           channel: stable
-      - name: Create signing key
+      - name: Prepare signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          SIGNING_ALIAS: ${{ secrets.SIGNING_ALIAS }}
         run: |
-          keytool -genkey -keystore $HOME/release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias key -storepass android123 -keypass android123 -dname "CN=Classipod"
+          [ -n "$KEYSTORE_BASE64" ] || { echo "Missing secret SIGNING_KEYSTORE_BASE64"; exit 1; }
+          echo "$KEYSTORE_BASE64" | base64 -d > $HOME/release.jks
           cat > android/key.properties <<EOF
-          storePassword=android123
-          keyPassword=android123
-          keyAlias=key
+          storePassword=$SIGNING_PASSWORD
+          keyPassword=$SIGNING_PASSWORD
+          keyAlias=$SIGNING_ALIAS
           storeFile=$HOME/release.jks
           EOF
       - run: flutter pub get
-      - run: flutter build apk --release --flavor dev
+      - run: flutter build apk --release --flavor dev --build-number=${{ github.run_number }}
       - name: Rename APK
         run: cp "$(ls build/app/outputs/flutter-apk/*-release.apk | head -n 1)" CorrentPod.apk
       - name: Publish release
         if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           gh release create "build-${{ github.run_number }}" CorrentPod.apk \
             --title "CorrentPod build ${{ github.run_number }}" \
             --generate-notes \
             --target "${{ github.sha }}"
+      - name: Keep only the latest 5 releases
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release list --limit 100 --json tagName --jq '.[10:][].tagName' | xargs -r -n1 gh release delete --cleanup-tag --yes
