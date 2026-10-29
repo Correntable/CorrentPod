@@ -75,7 +75,8 @@ class LibraryAudioHandler extends BaseAudioHandler {
   int _sourceVersion = 0;
   final LogicalQueue logicalQueue = LogicalQueue();
   final List<String> _upNext = [];
-  int? _contextIndex;
+  int? get _contextIndex => logicalQueue.anchor;
+  set _contextIndex(int? value) => logicalQueue.anchor = value;
   final StreamController<int?> _indices = StreamController.broadcast();
   final List<StreamSubscription<dynamic>> _subscriptions = [];
   List<MusicMetadata> _songs = [];
@@ -454,18 +455,21 @@ class LibraryAudioHandler extends BaseAudioHandler {
 
   @override
   Future<void> skipToQueueItem(int index) => select(index);
-
-  Future<void> appendSong(MusicMetadata song) => _serialize(() async {
-    _songs = List.unmodifiable([..._songs, song]);
-    logicalQueue.addSong(_songs.length - 1);
+  
+  Future<void> appendSongs(List<MusicMetadata> songs) => _serialize(() async {
+    _songs = List.unmodifiable([..._songs, ...songs]);
+    for (final _ in songs) {
+      logicalQueue.addExtra();
+    }
     _broadcast();
   });
 
-  void enqueue(MusicMetadata song, {bool playNext = false}) {
+  void enqueue(List<MusicMetadata> songs, {bool playNext = false}) {
+    final identities = songs.map((song) => song.identity).toList();
     if (playNext) {
-      _upNext.insert(0, song.identity);
+      _upNext.insertAll(0, identities);
     } else {
-      _upNext.add(song.identity);
+      _upNext.addAll(identities);
     }
   }
 
