@@ -7,7 +7,12 @@ class LogicalQueue {
   final Random random;
   List<int> _order = [];
   List<int> _positions = [];
+  int _total = 0;
   int index = 0;
+
+  /// Song of the regular order we left to play queued songs. While a queued
+  /// song is playing, the queue position shown is the one of this song.
+  int? anchor;
   PlaybackShuffleMode shuffleMode = PlaybackShuffleMode.off;
   List<List<int>> _albums = [];
   LoopMode loopMode = LoopMode.off;
@@ -16,10 +21,26 @@ class LogicalQueue {
 
   int get length => _order.length;
 
-  int get position => _positions.isEmpty ? 0 : _positions[index];
+  /// Songs added on the fly, which live outside the regular order.
+  int get extraCount => _total - _order.length;
+
+  int get position => _positionOf(index);
+
+  int _positionOf(int song) {
+    if (song >= 0 && song < _positions.length && _positions[song] >= 0) {
+      return _positions[song];
+    }
+    final a = anchor;
+    if (a != null && a >= 0 && a < _positions.length && _positions[a] >= 0) {
+      return _positions[a];
+    }
+    return 0;
+  }
 
   void reset(int length, {List<List<int>>? albums, int initialIndex = 0}) {
     index = initialIndex;
+    anchor = null;
+    _total = length;
     _order = List.generate(length, (index) => index);
     _albums =
         albums ??
@@ -29,11 +50,20 @@ class LogicalQueue {
     _reorder();
   }
 
+  /// Registers a song added after the queue was built. It is not part of the
+  /// regular order: it can only be played through the "up next" list.
+  int addExtra() {
+    _positions = [..._positions, -1];
+    return _total++;
+  }
+
   void setShuffle(PlaybackShuffleMode mode) {
     if (shuffleMode == mode) return;
     shuffleMode = mode;
     _reorder();
   }
+
+  int? get _contextCurrent => _order.contains(index) ? index : anchor;
 
   void _reorder() {
     switch (shuffleMode) {
@@ -41,21 +71,24 @@ class LogicalQueue {
         _order.sort();
       case PlaybackShuffleMode.songs:
         _order.shuffle(random);
-        if (_order.isNotEmpty) {
-          _order.remove(index);
-          _order.insert(0, index);
+        final current = _contextCurrent;
+        if (current != null && _order.remove(current)) {
+          _order.insert(0, current);
         }
       case PlaybackShuffleMode.albums:
         final albums = _albums.toList()..shuffle(random);
-        final current = albums.indexWhere((album) => album.contains(index));
-        if (current >= 0) albums.insert(0, albums.removeAt(current));
+        final current = _contextCurrent;
+        final currentAlbum = current == null
+            ? -1
+            : albums.indexWhere((album) => album.contains(current));
+        if (currentAlbum >= 0) albums.insert(0, albums.removeAt(currentAlbum));
         _order = albums.expand((album) => album).toList();
     }
     _indexPositions();
   }
 
   void _indexPositions() {
-    _positions = List.filled(length, 0);
+    _positions = List.filled(_total, -1);
     for (var position = 0; position < length; position++) {
       _positions[_order[position]] = position;
     }
@@ -65,20 +98,14 @@ class LogicalQueue {
     if (_order.isEmpty) return null;
     final current = from ?? index;
     if (automatic && loopMode == LoopMode.one) return current;
-    final position = _positions[current] + 1;
+    final position = _positionOf(current) + 1;
     if (position < length) return _order[position];
     return loopMode == LoopMode.all ? _order.first : null;
   }
 
-  void addSong(int songIndex) {
-    _order.add(songIndex);
-    _albums.add([songIndex]);
-    _indexPositions();
-  }
-
   int? previous() {
     if (_order.isEmpty) return null;
-    final position = _positions[index] - 1;
+    final position = _positionOf(index) - 1;
     if (position >= 0) return _order[position];
     return loopMode == LoopMode.all ? _order.last : null;
   }
