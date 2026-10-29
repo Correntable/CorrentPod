@@ -10,6 +10,7 @@ import 'package:classipod/features/now_playing/provider/now_playing_details_prov
 import 'package:classipod/features/settings/controller/settings_preferences_controller.dart';
 import 'package:classipod/features/settings/models/settings_preferences_model.dart';
 import 'package:classipod/features/settings/widgets/settings_list_tile.dart';
+import 'package:classipod/features/shake_shuffle/shake_shuffle.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,6 +29,7 @@ enum _SettingsDisplayItems {
   isTouchScreenEnabled,
   vibrate,
   clickWheelSound,
+  shakeToShuffle,
   volumeMode,
   splitScreenEnabled,
   immersiveMode,
@@ -64,6 +66,8 @@ enum _SettingsDisplayItems {
         return context.localization.vibrateSettingTitle;
       case clickWheelSound:
         return context.localization.clickWheelSettingTitle;
+      case shakeToShuffle:
+        return 'Shake to Shuffle';
       case splitScreenEnabled:
         return context.localization.splitScreenSettingTitle;
       case immersiveMode:
@@ -154,6 +158,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             .read(settingsPreferencesControllerProvider.notifier)
             .toggleClickWheelSound();
         break;
+      case _SettingsDisplayItems.shakeToShuffle:
+        await ref.read(shakeToShuffleProvider.notifier).toggle();
+        break;
       case _SettingsDisplayItems.volumeMode:
         await ref
             .read(settingsPreferencesControllerProvider.notifier)
@@ -232,6 +239,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         return settingsState.repeatMode.title(context);
       case _SettingsDisplayItems.volumeMode:
         return settingsState.volumeMode.title(context);
+      case _SettingsDisplayItems.shakeToShuffle:
+        return ref.watch(shakeToShuffleProvider)
+            ? context.localization.tileValueOn
+            : context.localization.tileValueOff;
       default:
         final bool? isOn = _isOn(settingsState, settingsItem);
         if (isOn != null) {
