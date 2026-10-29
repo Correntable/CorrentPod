@@ -1,4 +1,4 @@
-#CorrentPod
+# CorrentPod
 
 CorrentPod is a personal fork of [Classipod](https://github.com/adeeteya/Classipod) by Aditya R. It keeps everything that makes the original great: a click wheel interface, Cover Flow, local music playback and Subsonic/Navidrome streaming. On top of that, it adds a few tweaks of its own.
 
@@ -13,7 +13,7 @@ I'm not a developer so I'm doing everything with Claude and for Android only. I'
 
 Lock screen persistence needs Android 8.1 or newer.
 
-Download
+## Download
 
 Download the latest APK from the [Releases page](../../releases/latest), or directly:
 [CorrentPod.apk](https://github.com/Correntable/CorrentPod/releases/latest/download/CorrentPod.apk)
@@ -23,11 +23,11 @@ Notes:
 - The build uses the `dev` flavor, so it installs **next to** the original Classipod without replacing it.
 - If playback stops in the background, exclude the app from battery optimization.
 
-## 🎶 Features
+## Features
 
 For the complete feature list (local library, Subsonic/Navidrome streaming, Cover Flow, themes, sleep timer, lyrics and more), see the [original project's README](https://github.com/adeeteya/Classipod#readme).
 
-## 🙏 Credits and license
+## Credits and license
 
 - **Original app:** [Classipod](https://github.com/adeeteya/Classipod) by [Aditya R](https://github.com/adeeteya)
 - **This fork:** maintained by [Correntable](https://github.com/Correntable)
