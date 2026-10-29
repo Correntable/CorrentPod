@@ -535,6 +535,19 @@ class LibraryAudioHandler extends BaseAudioHandler {
     onCheckpoint?.call();
   }
 
+    Future<void> shuffleFromStart() {
+    logicalQueue.setShuffle(
+      PlaybackShuffleMode.songs,
+      keepCurrent: false,
+      force: true,
+    );
+    _broadcast();
+    final first = logicalQueue.first;
+    return first == null
+        ? Future.value()
+        : select(first, startPlaying: _wantPlayback);
+  }
+  
   void _reportError(Object error) {
     if (_restoredSongPending && onRestoreFailure != null) {
       _restoredSongPending = false;
