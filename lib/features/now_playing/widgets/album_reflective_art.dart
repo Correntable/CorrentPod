@@ -15,6 +15,7 @@ class AlbumReflectiveArt extends ConsumerStatefulWidget {
   final double? imageWidth;
   final String heroTag;
   final bool tiltedImage;
+  final bool showReflection;
 
   const AlbumReflectiveArt({
     super.key,
@@ -24,6 +25,7 @@ class AlbumReflectiveArt extends ConsumerStatefulWidget {
     this.imageWidth,
     required this.heroTag,
     this.tiltedImage = false,
+    this.showReflection = true,
   });
 
   @override
@@ -54,11 +56,17 @@ class _AlbumReflectiveArtState extends ConsumerState<AlbumReflectiveArt>
 
   @override
   Widget build(BuildContext context) {
+    // 3D tilt settings: tweak these to taste.
+    const tiltAngle = -0.35; // rotation in radians (0 = frontal)
+    const tiltPerspective = 0.002; // higher = stronger perspective
+    const tiltScale = 0.94; // keeps the tilted cover inside its box
+
     late final Matrix4 transform;
     if (widget.tiltedImage) {
       transform = Matrix4.identity()
-        ..setEntry(3, 2, 0.003)
-        ..rotateY(-0.12);
+        ..setEntry(3, 2, tiltPerspective)
+        ..rotateY(tiltAngle)
+        ..multiply(Matrix4.diagonal3Values(tiltScale, tiltScale, 1));
     } else {
       transform = Matrix4.identity();
     }
@@ -114,87 +122,96 @@ class _AlbumReflectiveArtState extends ConsumerState<AlbumReflectiveArt>
               child: sourceWidget,
             );
           },
-      child: Transform(
-        transform: transform,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final width = min(
-              widget.imageWidth ?? constraints.maxWidth,
-              constraints.maxWidth,
-            );
-            final height = min(
-              widget.imageWidth ?? constraints.maxHeight,
-              max(0.0, constraints.maxHeight - widget.reflectedImageHeight),
-            );
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = min(
+            widget.imageWidth ?? constraints.maxWidth,
+            constraints.maxWidth,
+          );
+          final height = min(
+            widget.imageWidth ?? constraints.maxHeight,
+            max(0.0, constraints.maxHeight - widget.reflectedImageHeight),
+          );
 
-            Widget artwork() => Image(
-              image: artworkImage(ref, widget.thumbnailPath),
+          Widget artwork() => Image(
+            image: artworkImage(ref, widget.thumbnailPath),
+            width: width,
+            height: height,
+            alignment: Alignment.bottomCenter,
+            fit: BoxFit.scaleDown,
+            errorBuilder: (_, _, _) => Image.asset(
+              Assets.defaultAlbumCoverImage,
               width: width,
               height: height,
               alignment: Alignment.bottomCenter,
               fit: BoxFit.scaleDown,
-              errorBuilder: (_, _, _) => Image.asset(
-                Assets.defaultAlbumCoverImage,
-                width: width,
-                height: height,
-                alignment: Alignment.bottomCenter,
-                fit: BoxFit.scaleDown,
-              ),
-            );
+            ),
+          );
 
-            return Column(
+          // Pivot the tilt on the center of the cover, so the top and bottom
+          // edges converge symmetrically (true perspective).
+          final tiltAlignment =
+              constraints.maxHeight.isFinite && constraints.maxHeight > 0
+              ? Alignment(0, height / constraints.maxHeight - 1)
+              : Alignment.center;
+
+          return Transform(
+            transform: transform,
+            alignment: tiltAlignment,
+            child: Column(
               children: [
                 artwork(),
-                FadeTransition(
-                  opacity: _animation,
-                  child: SizedBox(
-                    width: width,
-                    height: widget.reflectedImageHeight,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        ClipRect(
-                          child: OverflowBox(
-                            alignment: Alignment.topCenter,
-                            minHeight: height,
-                            maxHeight: height,
-                            child: Transform.flip(
-                              flipY: true,
-                              child: artwork(),
+                if (widget.showReflection)
+                  FadeTransition(
+                    opacity: _animation,
+                    child: SizedBox(
+                      width: width,
+                      height: widget.reflectedImageHeight,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          ClipRect(
+                            child: OverflowBox(
+                              alignment: Alignment.topCenter,
+                              minHeight: height,
+                              maxHeight: height,
+                              child: Transform.flip(
+                                flipY: true,
+                                child: artwork(),
+                              ),
                             ),
                           ),
-                        ),
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            border: Border(
-                              left: BorderSide(
-                                color: overlayBorderColor,
-                                width: 0,
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                left: BorderSide(
+                                  color: overlayBorderColor,
+                                  width: 0,
+                                ),
+                                right: BorderSide(
+                                  color: overlayBorderColor,
+                                  width: 0,
+                                ),
+                                bottom: BorderSide(
+                                  color: overlayBorderColor,
+                                  width: 0,
+                                ),
                               ),
-                              right: BorderSide(
-                                color: overlayBorderColor,
-                                width: 0,
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [overlayTopColor, overlayBottomColor],
                               ),
-                              bottom: BorderSide(
-                                color: overlayBorderColor,
-                                width: 0,
-                              ),
-                            ),
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [overlayTopColor, overlayBottomColor],
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
               ],
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
