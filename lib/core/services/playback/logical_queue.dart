@@ -17,6 +17,9 @@ class LogicalQueue {
   /// Slots (positions in the regular order) after which a queued song has
   /// been played. They shift the numbering of everything that follows.
   final List<int> _insertedAt = [];
+
+  /// Songs taken out of the regular order because they were queued.
+  final Set<int> _removed = {};
   PlaybackShuffleMode shuffleMode = PlaybackShuffleMode.off;
   List<List<int>> _albums = [];
   LoopMode loopMode = LoopMode.off;
@@ -65,6 +68,7 @@ class LogicalQueue {
     index = initialIndex;
     anchor = null;
     _total = length;
+    _removed.clear();
     _order = List.generate(length, (index) => index);
     _albums =
         albums ??
@@ -79,6 +83,23 @@ class LogicalQueue {
   int addExtra() {
     _positions = [..._positions, -1];
     return _total++;
+  }
+
+  /// Songs of the regular order that have not been played yet.
+  List<int> get upcoming {
+    final from = anchor ?? index;
+    if (from < 0 || from >= _positions.length || _positions[from] < 0) {
+      return [];
+    }
+    return _order.sublist(_positions[from] + 1);
+  }
+
+  /// Takes a song out of the regular order (it is queued instead).
+  bool removeFromOrder(int song) {
+    if (!_order.remove(song)) return false;
+    _removed.add(song);
+    _indexPositions();
+    return true;
   }
 
   void setShuffle(PlaybackShuffleMode mode) {
@@ -107,7 +128,10 @@ class LogicalQueue {
             ? -1
             : albums.indexWhere((album) => album.contains(current));
         if (currentAlbum >= 0) albums.insert(0, albums.removeAt(currentAlbum));
-        _order = albums.expand((album) => album).toList();
+        _order = albums
+            .expand((album) => album)
+            .where((song) => !_removed.contains(song))
+            .toList();
     }
     _indexPositions();
   }
