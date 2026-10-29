@@ -2,6 +2,7 @@ import 'package:classipod/core/extensions/build_context_extensions.dart';
 import 'package:classipod/core/navigation/routes.dart';
 import 'package:classipod/core/services/audio_player_service.dart';
 import 'package:classipod/features/app_startup/controllers/splash_controller.dart';
+import 'package:classipod/features/shake_shuffle/shake_shuffle.dart';
 import 'package:classipod/features/settings/controller/settings_preferences_controller.dart';
 import 'package:classipod/l10n/generated/app_localizations.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
@@ -17,6 +18,7 @@ class ClassipodApp extends ConsumerWidget {
     );
     if (libraryInitialized) {
       ref.listen(audioPlayerServiceProvider, (_, _) {});
+      ref.watch(shakeShuffleProvider);
     }
     final languageLocaleCode = ref.watch(
       settingsPreferencesControllerProvider.select(
