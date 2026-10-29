@@ -13,6 +13,10 @@ class LogicalQueue {
   /// Song of the regular order we left to play queued songs. While a queued
   /// song is playing, the queue position shown is the one of this song.
   int? anchor;
+
+  /// Slots (positions in the regular order) after which a queued song has
+  /// been played. They shift the numbering of everything that follows.
+  final List<int> _insertedAt = [];
   PlaybackShuffleMode shuffleMode = PlaybackShuffleMode.off;
   List<List<int>> _albums = [];
   LoopMode loopMode = LoopMode.off;
@@ -24,7 +28,27 @@ class LogicalQueue {
   /// Songs added on the fly, which live outside the regular order.
   int get extraCount => _total - _order.length;
 
-  int get position => _positionOf(index);
+  /// Position shown to the user: counts the queued songs already played.
+  int get position {
+    final a = anchor;
+    final slot = _slot(a ?? index);
+    var shift = 0;
+    for (final at in _insertedAt) {
+      if (at < slot || (a != null && at == slot)) shift++;
+    }
+    return slot + shift;
+  }
+
+  int _slot(int song) =>
+      song >= 0 && song < _positions.length && _positions[song] >= 0
+      ? _positions[song]
+      : 0;
+
+  /// Call when a queued song starts playing.
+  void recordExtra() {
+    final a = anchor;
+    if (a != null) _insertedAt.add(_slot(a));
+  }
 
   int _positionOf(int song) {
     if (song >= 0 && song < _positions.length && _positions[song] >= 0) {
@@ -66,6 +90,7 @@ class LogicalQueue {
   int? get _contextCurrent => _order.contains(index) ? index : anchor;
 
   void _reorder() {
+    _insertedAt.clear();
     switch (shuffleMode) {
       case PlaybackShuffleMode.off:
         _order.sort();
