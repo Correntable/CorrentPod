@@ -237,8 +237,7 @@ class AudioPlayerServiceNotifier extends AsyncNotifier<void> {
         );
       }
 
-      await setShuffleMode(PlaybackShuffleMode.songs);
-      await nextSong();
+      await ref.read(libraryAudioHandlerProvider).shuffleFromStart();
       Future.delayed(const Duration(milliseconds: 100), play);
 
       await ref
