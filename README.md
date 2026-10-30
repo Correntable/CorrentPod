@@ -10,7 +10,7 @@ I'm not a developer so I'm doing everything with Claude and for Android only. I'
 
 - When the app is open and you lock the device, when you press the power button or any other method to wake up the screen, the app is already there, ready to be used. Everything else remains locked beneath the app. If the app was not open and you lock the phone, when tapping from the lockscreen on the Media Control Notification, the app will popup without unlocking. (DONE)
 - "Play Next" and "Add to queue" feature, both for single songs and albums, with enhanced management of the index of the songs of the queue. (IN PROGRESS)
-- Shake to Shuffle
+- Shake to Shuffle (DONE)
 - New algorithm for Smart Shuffle
 - Improved text encoding for better management of string with special characters
 - Cover Flow sorted by artist, then by album release year, then alphabetically, as in the old good Apple Cover Flow
