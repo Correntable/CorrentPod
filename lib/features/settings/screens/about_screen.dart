@@ -41,7 +41,7 @@ class AboutScreen extends ConsumerWidget {
                         color: context.appPrimaryTextColor,
                       ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8,
                 AboutListTile(
                   titleText: context.localization.songsScreenTitle,
                   valueText:
@@ -56,7 +56,7 @@ class AboutScreen extends ConsumerWidget {
                   valueText: "${ref.read(albumDetailsProvider).length}",
                 ),
                 AboutListTile(
-                  titleText: Version,
+                  titleText: "Version",
                   valueText: "0.0.1",
                 ),
                 AboutListTile(
