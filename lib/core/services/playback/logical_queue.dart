@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:classipod/core/models/playback_shuffle_mode.dart';
 import 'package:just_audio/just_audio.dart';
 
+/// Every song, including the ones added with "Play next" / "Add to queue",
+/// is a plain member of [_order]. Next/previous is always +1 / -1.
 class LogicalQueue {
   final Random random;
   List<int> _order = [];
@@ -10,16 +12,10 @@ class LogicalQueue {
   int _total = 0;
   int index = 0;
 
-  /// Song of the regular order we left to play queued songs. While a queued
-  /// song is playing, the queue position shown is the one of this song.
-  int? anchor;
+  /// Songs explicitly queued by the user (to keep them right after the
+  /// current song when the shuffle mode changes).
+  final Set<int> _queued = {};
 
-  /// Slots (positions in the regular order) after which a queued song has
-  /// been played. They shift the numbering of everything that follows.
-  final List<int> _insertedAt = [];
-
-  /// Songs taken out of the regular order because they were queued.
-  final Set<int> _removed = {};
   PlaybackShuffleMode shuffleMode = PlaybackShuffleMode.off;
   List<List<int>> _albums = [];
   LoopMode loopMode = LoopMode.off;
@@ -28,47 +24,17 @@ class LogicalQueue {
 
   int get length => _order.length;
 
-  /// Songs added on the fly, which live outside the regular order.
-  int get extraCount => _total - _order.length;
+  int get position => _positionOf(index);
 
-  /// Position shown to the user: counts the queued songs already played.
-  int get position {
-    final a = anchor;
-    final slot = _slot(a ?? index);
-    var shift = 0;
-    for (final at in _insertedAt) {
-      if (at < slot || (a != null && at == slot)) shift++;
-    }
-    return slot + shift;
-  }
-
-  int _slot(int song) =>
+  int _positionOf(int song) =>
       song >= 0 && song < _positions.length && _positions[song] >= 0
       ? _positions[song]
       : 0;
 
-  /// Call when a queued song starts playing.
-  void recordExtra() {
-    final a = anchor;
-    if (a != null) _insertedAt.add(_slot(a));
-  }
-
-  int _positionOf(int song) {
-    if (song >= 0 && song < _positions.length && _positions[song] >= 0) {
-      return _positions[song];
-    }
-    final a = anchor;
-    if (a != null && a >= 0 && a < _positions.length && _positions[a] >= 0) {
-      return _positions[a];
-    }
-    return 0;
-  }
-
   void reset(int length, {List<List<int>>? albums, int initialIndex = 0}) {
     index = initialIndex;
-    anchor = null;
     _total = length;
-    _removed.clear();
+    _queued.clear();
     _order = List.generate(length, (index) => index);
     _albums =
         albums ??
@@ -78,31 +44,43 @@ class LogicalQueue {
     _reorder();
   }
 
-  /// Registers a song added after the queue was built. It is not part of the
-  /// regular order: it can only be played through the "up next" list.
-  int addExtra() {
-    _positions = [..._positions, -1];
-    return _total++;
-  }
-
-  /// Songs of the regular order that have not been played yet.
+  /// Songs of the order that have not been played yet.
   List<int> get upcoming {
-    final from = anchor ?? index;
-    if (from < 0 || from >= _positions.length || _positions[from] < 0) {
+    if (index < 0 || index >= _positions.length || _positions[index] < 0) {
       return [];
     }
-    return _order.sublist(_positions[from] + 1);
+    return _order.sublist(_positions[index] + 1);
   }
 
-  /// Takes a song out of the regular order (it is queued instead).
-  bool removeFromOrder(int song) {
-    if (!_order.remove(song)) return false;
-    _removed.add(song);
+  /// Registers a song added after the queue was built and returns its index.
+  /// It is not in the order until [queue] places it.
+  int addExtra() {
+    final song = _total++;
+    _albums = [
+      ..._albums,
+      [song],
+    ];
+    _positions = [..._positions, -1];
+    return song;
+  }
+
+  /// Places [songs] after the current one.
+  void queue(List<int> songs, {required bool playNext}) {
+    if (songs.isEmpty) return;
+    final moving = songs.toSet();
+    _order.removeWhere(moving.contains);
+    final current = _order.indexOf(index);
+    var at = current + 1;
+    if (!playNext) {
+      while (at < _order.length && _queued.contains(_order[at])) {
+        at++;
+      }
+    }
+    _order.insertAll(at, songs);
+    _queued.addAll(songs);
     _indexPositions();
-    return true;
   }
 
-  /// First song of the regular order.
   int? get first => _order.isEmpty ? null : _order.first;
 
   void setShuffle(
@@ -115,30 +93,40 @@ class LogicalQueue {
     _reorder(keepCurrent: keepCurrent);
   }
 
-  int? get _contextCurrent => _order.contains(index) ? index : anchor;
-
   void _reorder({bool keepCurrent = true}) {
-    _insertedAt.clear();
+    final current = keepCurrent && _order.contains(index) ? index : null;
+
+    final pending = <int>[];
+    if (current != null) {
+      final from = _order.indexOf(current) + 1;
+      for (var i = from; i < _order.length; i++) {
+        if (_queued.contains(_order[i])) pending.add(_order[i]);
+      }
+    } else {
+      _queued.clear();
+    }
+
     switch (shuffleMode) {
       case PlaybackShuffleMode.off:
         _order.sort();
       case PlaybackShuffleMode.songs:
         _order.shuffle(random);
-        final current = keepCurrent ? _contextCurrent : null;
         if (current != null && _order.remove(current)) {
           _order.insert(0, current);
         }
       case PlaybackShuffleMode.albums:
         final albums = _albums.toList()..shuffle(random);
-        final current = keepCurrent ? _contextCurrent : null;
         final currentAlbum = current == null
             ? -1
             : albums.indexWhere((album) => album.contains(current));
         if (currentAlbum >= 0) albums.insert(0, albums.removeAt(currentAlbum));
-        _order = albums
-            .expand((album) => album)
-            .where((song) => !_removed.contains(song))
-            .toList();
+        _order = albums.expand((album) => album).toList();
+    }
+
+    if (pending.isNotEmpty) {
+      final moving = pending.toSet();
+      _order.removeWhere(moving.contains);
+      _order.insertAll(_order.indexOf(current!) + 1, pending);
     }
     _indexPositions();
   }
@@ -150,11 +138,10 @@ class LogicalQueue {
     }
   }
 
-  int? next({bool automatic = false, int? from}) {
+  int? next({bool automatic = false}) {
     if (_order.isEmpty) return null;
-    final current = from ?? index;
-    if (automatic && loopMode == LoopMode.one) return current;
-    final position = _positionOf(current) + 1;
+    if (automatic && loopMode == LoopMode.one) return index;
+    final position = _positionOf(index) + 1;
     if (position < length) return _order[position];
     return loopMode == LoopMode.all ? _order.first : null;
   }
