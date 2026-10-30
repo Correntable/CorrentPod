@@ -41,7 +41,7 @@ class AboutScreen extends ConsumerWidget {
                         color: context.appPrimaryTextColor,
                       ),
                 ),
-                const SizedBox(height: 8},
+                const SizedBox(height: 8),
                 AboutListTile(
                   titleText: context.localization.songsScreenTitle,
                   valueText:
