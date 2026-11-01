@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:classipod/core/extensions/build_context_extensions.dart';
+import 'package:classipod/core/models/shuffle_algorithm.dart';
 import 'package:classipod/core/subsonic/subsonic_controller.dart';
 import 'package:classipod/features/menu/controller/split_screen_controller.dart';
 import 'package:classipod/features/menu/models/split_screen_type.dart';
@@ -12,6 +13,7 @@ import 'package:classipod/features/menu/widgets/settings_preview_widget.dart';
 import 'package:classipod/features/menu/widgets/split_screen_preview_transition.dart';
 import 'package:classipod/features/music/songs/provider/songs_provider.dart';
 import 'package:classipod/features/settings/controller/settings_preferences_controller.dart';
+import 'package:classipod/features/settings/controller/shuffle_algorithm_controller.dart';
 import 'package:classipod/features/settings/widgets/subsonic_dialog.dart';
 import 'package:classipod/features/sleep_timer/widgets/sleep_timer_preview_widget.dart';
 import 'package:classipod/features/status_bar/widgets/screen_page_content.dart';
@@ -113,6 +115,22 @@ class _SplitScreenPlaceholderState extends ConsumerState<SplitScreenPlaceholder>
           icon: CupertinoIcons.shuffle,
           contentText:
               "${ref.watch(songsProvider).length} ${context.localization.songsScreenTitle}",
+        );
+      } else if (splitScreenType == SplitScreenType.shuffleAlgorithm) {
+        final algorithm = ref.watch(shuffleAlgorithmProvider);
+        splitScreenWidget = IconPreviewWidget(
+          titleText: 'Shuffle Type',
+          icon: CupertinoIcons.shuffle,
+          contentText: '${algorithm.title}\n${algorithm.description}',
+        );
+      } else if (splitScreenType == SplitScreenType.smartVariation) {
+        final algorithm = ref.watch(shuffleAlgorithmProvider);
+        final variation = ref.watch(smartVariationProvider);
+        splitScreenWidget = IconPreviewWidget(
+          titleText: 'Smart Variation',
+          icon: CupertinoIcons.slider_horizontal_3,
+          contentText:
+              '${variation.title}\n${algorithm == ShuffleAlgorithm.smart ? variation.description : 'Only used with the Smart shuffle type.'}',
         );
       } else if (splitScreenType == SplitScreenType.settings) {
         splitScreenWidget = const SettingsPreviewWidget();
