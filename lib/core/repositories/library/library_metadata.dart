@@ -48,7 +48,7 @@ MusicMetadata libraryMetadata(
   }
 
   final artists = names('ARTIST', 'artist', ['Unknown Artist']);
-  final albumArtists = names('ALBUMARTIST', 'album_artist', ['Unknown Artist']);
+  final albumArtists = names('ALBUMARTIST', 'album_artist', artists);
   final track = (song.metadata['track'] as num?)?.toInt();
   final duration = (tags['duration'] as int?) ?? 0;
   return MusicMetadata(
