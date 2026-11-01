@@ -35,8 +35,11 @@ MusicMetadata libraryMetadata(
   }
 
   int? number(String key) => parseInteger(text(key));
-  List<String> parseArtists(Iterable<String> entries) =>
-      conservativeNames(entries).expand(splitArtistNames).toSet().toList();
+  List<String> parseArtists(Iterable<String> entries) => entries
+      .map((value) => (normalizeMetadataString(value) ?? value).trim())
+      .where((value) => value.isNotEmpty && value != '<unknown>')
+      .toSet()
+      .toList();
   List<String> names(String key, String fallback, List<String> defaults) {
     final tagged = parseArtists(values(key));
     if (tagged.isNotEmpty) return tagged;
@@ -45,7 +48,7 @@ MusicMetadata libraryMetadata(
   }
 
   final artists = names('ARTIST', 'artist', ['Unknown Artist']);
-  final albumArtists = names('ALBUMARTIST', 'album_artist', artists);
+  final albumArtists = names('ALBUMARTIST', 'album_artist', ['Unknown Artist']);
   final track = (song.metadata['track'] as num?)?.toInt();
   final duration = (tags['duration'] as int?) ?? 0;
   return MusicMetadata(
