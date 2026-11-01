@@ -26,8 +26,7 @@ Lock screen persistence needs Android 8.1 or newer.
 
 ## Download
 
-Download the latest APK from the [Releases page](../../releases/latest), or directly:
-[CorrentPod.apk](https://github.com/Correntable/CorrentPod/releases/latest/download/CorrentPod.apk)
+Download the latest APK from the [Releases page](../../releases/latest)
 
 Notes:
 
