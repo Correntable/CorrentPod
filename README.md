@@ -38,5 +38,6 @@ For the complete feature list (local library, Subsonic/Navidrome streaming, Cove
 - **Original app:** [Classipod](https://github.com/adeeteya/Classipod) by [Aditya R](https://github.com/adeeteya)
 - **This fork:** maintained by [Correntable](https://github.com/Correntable)
 - Ipod icons created by [Freepik - Flaticon](https://www.flaticon.com/free-icons/ipod)
+- Sound when Shaking to Shuffle from [TUNER88] https://github.com/TUNER88/iOSSystemSoundsLibrary
 
 Licensed under the [BSD-4-Clause License](LICENSE), copyright (c) 2025 Aditya R. The original license and copyright notice are kept unchanged, as required.
