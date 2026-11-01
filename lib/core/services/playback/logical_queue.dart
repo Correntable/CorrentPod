@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import 'package:classipod/core/models/playback_shuffle_mode.dart';
+import 'package:classipod/core/models/shuffle_algorithm.dart';
+import 'package:classipod/core/services/playback/shuffle_algorithms.dart';
 import 'package:just_audio/just_audio.dart';
 
 /// Every song, including the ones added with "Play next" / "Add to queue",
@@ -20,6 +22,16 @@ class LogicalQueue {
   List<List<int>> _albums = [];
   LoopMode loopMode = LoopMode.off;
 
+  /// How the songs are mixed when [shuffleMode] is songs.
+  ShuffleAlgorithm shuffleAlgorithm = ShuffleAlgorithm.random;
+
+  /// Deviation allowed to the smart shuffle (see [SmartVariation]).
+  double smartJitter = SmartVariation.medium.jitter;
+
+  /// Artist key of every song (null = unknown) and album id of every song.
+  List<String?> _artists = [];
+  List<int> _albumOfSong = [];
+
   LogicalQueue({Random? random}) : random = random ?? Random();
 
   int get length => _order.length;
@@ -31,7 +43,12 @@ class LogicalQueue {
       ? _positions[song]
       : 0;
 
-  void reset(int length, {List<List<int>>? albums, int initialIndex = 0}) {
+  void reset(
+    int length, {
+    List<List<int>>? albums,
+    List<String?>? artists,
+    int initialIndex = 0,
+  }) {
     index = initialIndex;
     _total = length;
     _queued.clear();
@@ -41,7 +58,40 @@ class LogicalQueue {
         [
           for (final index in _order) [index],
         ];
+    _artists = artists != null && artists.length == length
+        ? List<String?>.of(artists)
+        : List<String?>.filled(length, null);
+    _indexAlbums();
     _reorder();
+  }
+
+  void _indexAlbums() {
+    _albumOfSong = List.filled(_total, -1);
+    for (var album = 0; album < _albums.length; album++) {
+      for (final song in _albums[album]) {
+        if (song >= 0 && song < _total) _albumOfSong[song] = album;
+      }
+    }
+  }
+
+  String? _artistOf(int song) =>
+      song >= 0 && song < _artists.length ? _artists[song] : null;
+
+  /// Songs without a known album get an id of their own.
+  int _albumOf(int song) =>
+      song >= 0 && song < _albumOfSong.length && _albumOfSong[song] >= 0
+      ? _albumOfSong[song]
+      : -(song + 2);
+
+  /// Sets the algorithm used by the songs shuffle. Returns true when the
+  /// current order has to be shuffled again to apply the change.
+  bool configureShuffle(ShuffleAlgorithm algorithm, double jitter) {
+    final reorder =
+        algorithm != shuffleAlgorithm ||
+        (algorithm == ShuffleAlgorithm.smart && jitter != smartJitter);
+    shuffleAlgorithm = algorithm;
+    smartJitter = jitter;
+    return reorder;
   }
 
   /// Songs of the order that have not been played yet.
@@ -54,12 +104,14 @@ class LogicalQueue {
 
   /// Registers a song added after the queue was built and returns its index.
   /// It is not in the order until [queue] places it.
-  int addExtra() {
+  int addExtra({String? artist}) {
     final song = _total++;
     _albums = [
       ..._albums,
       [song],
     ];
+    _albumOfSong = [..._albumOfSong, _albums.length - 1];
+    _artists = [..._artists, artist];
     _positions = [..._positions, -1];
     return song;
   }
@@ -110,9 +162,29 @@ class LogicalQueue {
       case PlaybackShuffleMode.off:
         _order.sort();
       case PlaybackShuffleMode.songs:
-        _order.shuffle(random);
-        if (current != null && _order.remove(current)) {
-          _order.insert(0, current);
+        if (shuffleAlgorithm == ShuffleAlgorithm.random) {
+          _order.shuffle(random);
+          if (current != null && _order.remove(current)) {
+            _order.insert(0, current);
+          }
+        } else {
+          // The current song and the songs queued by the user stay first, the
+          // rest is ordered avoiding clashes with them.
+          final head = <int>[?current, ...pending];
+          final placed = head.toSet();
+          final pool = _order.where((song) => !placed.contains(song)).toList();
+          _order = [
+            ...head,
+            ...orderSongs(
+              algorithm: shuffleAlgorithm,
+              pool: pool,
+              recent: head,
+              artistOf: _artistOf,
+              albumOf: _albumOf,
+              random: random,
+              jitter: smartJitter,
+            ),
+          ];
         }
       case PlaybackShuffleMode.albums:
         final albums = _albums.toList()..shuffle(random);

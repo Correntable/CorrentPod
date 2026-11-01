@@ -3,10 +3,21 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:classipod/core/models/music_metadata.dart';
 import 'package:classipod/core/models/playback_shuffle_mode.dart';
+import 'package:classipod/core/models/shuffle_algorithm.dart';
 import 'package:classipod/core/services/playback/logical_queue.dart';
 import 'package:classipod/core/utils/album_order.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
+
+/// Artist used by the shuffle to keep songs of the same artist apart.
+/// Null when the artist is unknown (such songs are never grouped together).
+String? shuffleArtistOf(MusicMetadata song) {
+  final names = song.trackArtistNames;
+  final name = (names != null && names.isNotEmpty ? names.first : null) ??
+      song.albumArtistName;
+  final key = name?.trim().toLowerCase();
+  return key == null || key.isEmpty ? null : key;
+}
 
 class LibraryAudioHandler extends BaseAudioHandler {
   final AudioPlayer player;
@@ -165,6 +176,7 @@ class LibraryAudioHandler extends BaseAudioHandler {
     logicalQueue.reset(
       _songs.length,
       albums: albums.values.toList(),
+      artists: [for (final song in _songs) shuffleArtistOf(song)],
       initialIndex: initialIndex,
     );
   }
@@ -461,7 +473,7 @@ class LibraryAudioHandler extends BaseAudioHandler {
         } else {
           // Not ahead in the queue (or already played): add a new entry.
           _songs = List.unmodifiable([..._songs, song]);
-          indices.add(logicalQueue.addExtra());
+          indices.add(logicalQueue.addExtra(artist: shuffleArtistOf(song)));
           added.add(song);
         }
       }
@@ -489,6 +501,21 @@ class LibraryAudioHandler extends BaseAudioHandler {
   @override
   Future<void> setShuffleMode(AudioServiceShuffleMode shuffleMode) async {
     logicalQueue.setShuffle(PlaybackShuffleMode.fromAudioService(shuffleMode));
+    _broadcast();
+    onCheckpoint?.call();
+  }
+
+  /// Applies the shuffle algorithm chosen in the settings. When the songs
+  /// shuffle is active the queue is mixed again (current song and songs queued
+  /// by the user stay where they are).
+  void configureShuffle(ShuffleAlgorithm algorithm, double jitter) {
+    final reorder = logicalQueue.configureShuffle(algorithm, jitter);
+    if (!reorder ||
+        _songs.isEmpty ||
+        logicalQueue.shuffleMode != PlaybackShuffleMode.songs) {
+      return;
+    }
+    logicalQueue.setShuffle(PlaybackShuffleMode.songs, force: true);
     _broadcast();
     onCheckpoint?.call();
   }
