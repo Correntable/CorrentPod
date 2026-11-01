@@ -42,12 +42,25 @@ class MainActivity : AudioServiceActivity() {
                     val stats = StatFs(storagePath)
                     val totalBytes = stats.totalBytes
                     val availableBytes = stats.availableBytes
-                    val audioBytes = queryIndexedAudioBytes()
+                    val audioBytes = queryIndexedBytes(
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                        MediaStore.Audio.Media.SIZE
+                    )
+                    val videoBytes = queryIndexedBytes(
+                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                        MediaStore.Video.Media.SIZE
+                    )
+                    val photoBytes = queryIndexedBytes(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        MediaStore.Images.Media.SIZE
+                    )
                     result.success(
                         mapOf(
                             "totalBytes" to totalBytes,
                             "availableBytes" to availableBytes,
-                            "audioBytes" to audioBytes
+                            "audioBytes" to audioBytes,
+                            "videoBytes" to videoBytes,
+                            "photoBytes" to photoBytes
                         )
                     )
                 } catch (exception: Exception) {
@@ -60,18 +73,12 @@ class MainActivity : AudioServiceActivity() {
             }
     }
 
-    private fun queryIndexedAudioBytes(): Long {
+    private fun queryIndexedBytes(uri: android.net.Uri, sizeColumnName: String): Long {
         var total = 0L
         var cursor: Cursor? = null
         try {
-            cursor = contentResolver.query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                arrayOf(MediaStore.Audio.Media.SIZE),
-                null,
-                null,
-                null
-            )
-            val sizeColumn = cursor?.getColumnIndex(MediaStore.Audio.Media.SIZE) ?: -1
+            cursor = contentResolver.query(uri, arrayOf(sizeColumnName), null, null, null)
+            val sizeColumn = cursor?.getColumnIndex(sizeColumnName) ?: -1
             if (cursor != null && sizeColumn >= 0) {
                 while (cursor.moveToNext()) {
                     if (!cursor.isNull(sizeColumn)) {
@@ -80,7 +87,7 @@ class MainActivity : AudioServiceActivity() {
                 }
             }
         } catch (_: SecurityException) {
-            // Keep storage totals available even if media access is restricted.
+            // Android may restrict media visibility; device totals remain available.
         } finally {
             cursor?.close()
         }
