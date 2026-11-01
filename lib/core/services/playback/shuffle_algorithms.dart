@@ -102,13 +102,13 @@ List<int> separateNeighbours(
   return result;
 }
 
-/// Spread shuffle: every artist gets its songs placed at evenly spaced ideal
-/// positions along the queue, with a random starting offset per artist and a
-/// random deviation of at most [jitter] (relative to the spacing) per song.
-/// Inside an artist the albums are spread the same way.
+/// Smart shuffle: artists and, within each artist, albums are interleaved
+/// progressively with randomized weighted selection. Larger groups are more
+/// likely to be selected, but the bias is deliberately sublinear so that
+/// single-track artists are not pushed systematically to the beginning.
 ///
-/// jitter 0 gives an almost perfectly even spacing, bigger values get closer
-/// to a plain random shuffle. Cost: O(n log n).
+/// [jitter] controls the strength of the group-size bias. Cost: O(n * g),
+/// where g is the number of non-empty groups (typically small).
 List<int> spreadOrder(
   List<int> pool, {
   required String? Function(int song) artistOf,
@@ -147,17 +147,47 @@ List<int> _interleaveAlbums(
   return _spreadGroups(albums, random, jitter);
 }
 
-/// Merges [groups] so that the songs of each group end up evenly spaced.
+/// Merges [groups] with a randomized, progressive scheduler.
+///
+/// At each position, a non-empty group is drawn at random. Larger groups get
+/// a modestly higher chance of being selected, but not a chance proportional
+/// to their full size: this prevents prolific artists from dominating the
+/// opening positions while still allowing them to appear more often overall.
+///
+/// [jitter] controls how strongly the remaining group size affects selection.
+/// It is deliberately a soft bias, not a target position: the result should
+/// feel shuffled rather than evenly spaced.
 List<int> _spreadGroups(List<List<int>> groups, Random random, double jitter) {
-  final keyed = <(int, double)>[];
-  for (final group in groups) {
-    final size = group.length;
-    final offset = random.nextDouble();
-    for (var i = 0; i < size; i++) {
-      final noise = (random.nextDouble() - 0.5) * 2 * jitter / size;
-      keyed.add((group[i], (i + offset) / size + noise));
+  final active = <List<int>>[
+    for (final group in groups)
+      if (group.isNotEmpty) (List<int>.of(group)..shuffle(random)),
+  ];
+  final result = <int>[];
+  final exponent = 0.25 + jitter.clamp(0.0, 1.0) * 0.5;
+
+  while (active.isNotEmpty) {
+    var totalWeight = 0.0;
+    final weights = <double>[];
+    for (final group in active) {
+      final weight = pow(group.length, exponent).toDouble();
+      weights.add(weight);
+      totalWeight += weight;
     }
+
+    var draw = random.nextDouble() * totalWeight;
+    var selected = weights.length - 1;
+    for (var i = 0; i < weights.length; i++) {
+      draw -= weights[i];
+      if (draw < 0) {
+        selected = i;
+        break;
+      }
+    }
+
+    final group = active[selected];
+    result.add(group.removeLast());
+    if (group.isEmpty) active.removeAt(selected);
   }
-  keyed.sort((a, b) => a.$2.compareTo(b.$2));
-  return [for (final entry in keyed) entry.$1];
+
+  return result;
 }

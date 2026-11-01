@@ -18,6 +18,12 @@ class LogicalQueue {
   /// current song when the shuffle mode changes).
   final Set<int> _queued = {};
 
+  /// Songs that have entered the explored part of the queue, in their
+  /// original playback order. This is a high-water mark: going backwards
+  /// never makes a song unexplored again.
+  final List<int> _exploredOrder = [];
+  final Set<int> _explored = {};
+
   PlaybackShuffleMode shuffleMode = PlaybackShuffleMode.off;
   List<List<int>> _albums = [];
   LoopMode loopMode = LoopMode.off;
@@ -94,6 +100,22 @@ class LogicalQueue {
     return reorder;
   }
 
+  /// Songs that have been played, skipped, or passed while moving forward.
+  /// The returned order is stable even when the current index moves backwards.
+  List<int> get explored => List.unmodifiable(_exploredOrder);
+
+  /// Advances the exploration frontier through [song]. Every song before it
+  /// in queue order is considered explored too (they were necessarily passed).
+  /// Calling this for a song behind the frontier never rewinds it.
+  void markExploredThrough(int song) {
+    if (song < 0 || song >= _positions.length || _positions[song] < 0) return;
+    final target = _positions[song];
+    for (var i = _exploredOrder.length; i <= target && i < _order.length; i++) {
+      final passed = _order[i];
+      if (_explored.add(passed)) _exploredOrder.add(passed);
+    }
+  }
+
   /// Songs of the order that have not been played yet.
   List<int> get upcoming {
     if (index < 0 || index >= _positions.length || _positions[index] < 0) {
@@ -122,7 +144,9 @@ class LogicalQueue {
     final moving = songs.toSet();
     _order.removeWhere(moving.contains);
     final current = _order.indexOf(index);
-    var at = current + 1;
+    // Never insert into the explored prefix, even if the user has navigated
+    // backwards into it.
+    var at = max(current + 1, _exploredOrder.length);
     if (!playNext) {
       while (at < _order.length && _queued.contains(_order[at])) {
         at++;
@@ -198,8 +222,17 @@ class LogicalQueue {
     if (pending.isNotEmpty) {
       final moving = pending.toSet();
       _order.removeWhere(moving.contains);
-      _order.insertAll(_order.indexOf(current!) + 1, pending);
+      final insertion = current == null
+          ? _exploredOrder.length
+          : max(_order.indexOf(current) + 1, _exploredOrder.length);
+      _order.insertAll(insertion, pending);
     }
+
+    // Reordering may only affect the unexplored tail. The explored prefix is
+    // immutable, including after previous/seek-back and shuffle reconfiguration.
+    final exploredSet = _exploredOrder.toSet();
+    _order.removeWhere(exploredSet.contains);
+    _order.insertAll(0, _exploredOrder);
     _indexPositions();
   }
 

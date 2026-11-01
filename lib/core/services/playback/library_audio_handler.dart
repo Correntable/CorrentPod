@@ -216,6 +216,7 @@ class LibraryAudioHandler extends BaseAudioHandler {
     if (songs.isEmpty) return;
     await _serialize(() async {
       logicalQueue.index = index;
+      logicalQueue.markExploredThrough(index);
       _restoredSongPending = resetOnFailure;
       _initialPosition = position;
       _lastPosition = position;
@@ -342,6 +343,7 @@ class LibraryAudioHandler extends BaseAudioHandler {
   }
 
   void _startPlayer() {
+    logicalQueue.markExploredThrough(logicalQueue.index);
     _error = null;
     _broadcast();
     unawaited(player.play().catchError(_reportError));
@@ -483,8 +485,10 @@ class LibraryAudioHandler extends BaseAudioHandler {
     return added;
   }
 
-  int? _nextIndex({bool automatic = false}) =>
-      logicalQueue.next(automatic: automatic);
+  int? _nextIndex({bool automatic = false}) {
+    logicalQueue.markExploredThrough(logicalQueue.index);
+    return logicalQueue.next(automatic: automatic);
+  }
 
   @override
   Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {
