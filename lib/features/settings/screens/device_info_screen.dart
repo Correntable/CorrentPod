@@ -1,6 +1,5 @@
 import 'package:classipod/core/extensions/build_context_extensions.dart';
 import 'package:classipod/core/navigation/routes.dart';
-import 'package:classipod/core/theme/ipod_gradients.dart';
 import 'package:classipod/core/theme/ipod_typography.dart';
 import 'package:classipod/features/custom_screen_elements/custom_screen.dart';
 import 'package:classipod/features/settings/services/device_storage_service.dart';
@@ -27,7 +26,7 @@ class _DeviceInfoScreenState extends ConsumerState<DeviceInfoScreen>
   String get routeName => Routes.info.name;
 
   @override
-  List<String> get displayItems => const ['Storage'];
+  List<String> get displayItems => const ['Refresh'];
 
   @override
   Future<void> onSelectPressed() => _loadStorage();
@@ -45,7 +44,7 @@ class _DeviceInfoScreenState extends ConsumerState<DeviceInfoScreen>
     });
     try {
       if (defaultTargetPlatform != TargetPlatform.android) {
-        throw UnsupportedError('Device info is currently available on Android.');
+        throw UnsupportedError('Device information is available on Android only.');
       }
       final info = await _storageService.getStorageInfo();
       if (mounted) setState(() => _storage = info);
@@ -56,264 +55,192 @@ class _DeviceInfoScreenState extends ConsumerState<DeviceInfoScreen>
     }
   }
 
-  String _formatBytes(int bytes) {
-    final value = bytes / (1024 * 1024 * 1024);
-    return '${value.toStringAsFixed(1)} GB';
-  }
+  String _formatBytes(int bytes) =>
+      '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
 
   @override
   Widget build(BuildContext context) {
     final storage = _storage;
     final used = storage?.usedBytes ?? 0;
-    final audio = storage == null
-        ? 0
-        : storage.audioBytes.clamp(0, storage.usedBytes);
-    final other = storage == null ? 0 : storage.otherBytes;
     final free = storage?.availableBytes ?? 0;
+    final audio = storage?.audioBytes.clamp(0, used) ?? 0;
+    final video = storage?.videoBytes.clamp(0, used) ?? 0;
+    final photos = storage?.photoBytes.clamp(0, used) ?? 0;
+    final other = (used - audio - video - photos).clamp(0, used);
     final total = storage?.totalBytes ?? 0;
-    final usedFraction = total == 0 ? 0.0 : used / total;
-    final audioFraction = total == 0 ? 0.0 : audio / total;
-    final otherFraction = total == 0 ? 0.0 : other / total;
+    final usedRatio = total == 0 ? 0.0 : (used / total).clamp(0.0, 1.0);
 
     return CupertinoPageScaffold(
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Device Information',
-                    style: IpodTypography.title.copyWith(
-                      color: context.appPrimaryTextColor,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: _loading
-                    ? const Center(child: CupertinoActivityIndicator())
-                    : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Could not read device storage.',
-                              style: IpodTypography.body.copyWith(
-                                color: context.appPrimaryTextColor,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
-                            CupertinoButton(
-                              onPressed: _loadStorage,
-                              child: const Text('Try Again'),
-                            ),
-                          ],
-                        ),
-                      )
+      child: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFEAF5FC), Color(0xFFC8DCEC), Color(0xFFB6CDE0)],
+          ),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
+            child: _loading
+                ? const Center(child: CupertinoActivityIndicator())
+                : _error != null
+                    ? _errorContent(context)
                     : storage == null
-                    ? const SizedBox.shrink()
-                    : _buildStorageContent(
-                        context,
-                        storage,
-                        audio,
-                        other,
-                        free,
-                        audioFraction,
-                        otherFraction,
-                        usedFraction,
-                      ),
-              ),
-              CupertinoButton(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                onPressed: _loadStorage,
-                child: Text(
-                  'Refresh',
-                  style: IpodTypography.metadata.copyWith(
-                    color: context.appPrimaryTextColor,
-                  ),
-                ),
-              ),
-            ],
+                        ? const SizedBox.shrink()
+                        : _storageContent(
+                            context,
+                            storage,
+                            audio: audio,
+                            video: video,
+                            photos: photos,
+                            other: other,
+                            usedRatio: usedRatio,
+                          ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStorageContent(
+  Widget _errorContent(BuildContext context) => Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Could not read device storage.',
+                textAlign: TextAlign.center,
+                style: IpodTypography.body.copyWith(color: const Color(0xFF243342))),
+            CupertinoButton(onPressed: _loadStorage, child: const Text('Try Again')),
+          ],
+        ),
+      );
+
+  Widget _storageContent(
     BuildContext context,
-    DeviceStorageInfo storage,
-    int audio,
-    int other,
-    int free,
-    double audioFraction,
-    double otherFraction,
-    double usedFraction,
-  ) {
-    return SingleChildScrollView(
-      child: Column(
+    DeviceStorageInfo storage, {
+    required int audio,
+    required int video,
+    required int photos,
+    required int other,
+    required double usedRatio,
+  }) {
+    final free = storage.availableBytes;
+    return LayoutBuilder(builder: (context, constraints) {
+      final compact = constraints.maxHeight < 390;
+      return Column(
         children: [
+          Text('Device Information',
+              textAlign: TextAlign.center,
+              style: IpodTypography.title.copyWith(
+                color: const Color(0xFF172B3D),
+                fontSize: compact ? 20 : 23,
+                fontWeight: FontWeight.w700,
+              )),
+          SizedBox(height: compact ? 12 : 24),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(
-                child: _storageFigure(
-                  context,
-                  _formatBytes(storage.usedBytes),
-                  'Used',
-                ),
+              Expanded(child: _storageFigure(_formatBytes(storage.usedBytes), 'Used')),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Icon(Icons.android, size: compact ? 66 : 82,
+                    color: const Color(0xFF83B735)),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Icon(Icons.android, size: 54, color: Color(0xFF83B735)),
-              ),
-              Expanded(
-                child: _storageFigure(
-                  context,
-                  _formatBytes(free),
-                  'Available',
-                ),
-              ),
+              Expanded(child: _storageFigure(_formatBytes(free), 'Available')),
             ],
           ),
-          const SizedBox(height: 24),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: SizedBox(
-              height: 18,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: (audioFraction * 10000).round().clamp(0, 10000),
-                    child: const DecoratedBox(
-                      decoration: BoxDecoration(gradient: IpodGradients.progress),
-                    ),
-                  ),
-                  Expanded(
-                    flex: (otherFraction * 10000).round().clamp(0, 10000),
-                    child: const ColoredBox(color: Color(0xFF8C9FD7)),
-                  ),
-                  Expanded(
-                    flex: ((1 - usedFraction) * 10000).round().clamp(0, 10000),
-                    child: const ColoredBox(color: Color(0xFFE7E8E5)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 22),
-          Row(
-            children: [
-              Expanded(
-                child: _category(context, const Color(0xFF35AEE5), 'Audio', audio),
-              ),
-              Expanded(
-                child: _category(context, const Color(0xFF8298D7), 'Other', other),
-              ),
-              Expanded(
-                child: _category(context, const Color(0xFFDDE2E5), 'Free', free),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Container(height: 1, color: context.appOutlineColor),
-          Row(
-            children: [
-              const Icon(Icons.music_note, size: 34),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Audio storage', style: IpodTypography.menu.copyWith(
-                      color: context.appPrimaryTextColor,
-                    )),
-                    Text(
-                      '${_formatBytes(audio)} indexed on this device',
-                      style: IpodTypography.description.copyWith(
-                        color: context.appSecondaryTextColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Storage figures are provided by Android. Audio is calculated from indexed media files; Other is an estimate of the remaining used space.',
-            textAlign: TextAlign.center,
-            style: IpodTypography.caption.copyWith(
-              color: context.appSecondaryTextColor,
-            ),
+          SizedBox(height: compact ? 20 : 34),
+          _usageBar(usedRatio),
+          SizedBox(height: compact ? 14 : 22),
+          Row(children: [
+            Expanded(child: _category(const Color(0xFF35AEE5), 'Audio', audio)),
+            Expanded(child: _category(const Color(0xFF8298D7), 'Video', video)),
+            Expanded(child: _category(const Color(0xFFE8B83D), 'Photos', photos)),
+            Expanded(child: _category(const Color(0xFFE99543), 'Other', other)),
+          ]),
+          const Spacer(),
+          Container(height: 1, color: const Color(0x66869EAF)),
+          SizedBox(height: compact ? 8 : 14),
+          Row(children: [
+            const Icon(Icons.music_note, size: 34, color: Color(0xFF263D50)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Music Library', style: IpodTypography.menu.copyWith(
+                  color: const Color(0xFF172B3D), fontWeight: FontWeight.w700)),
+                Text('${_formatBytes(audio)} stored on this device',
+                    style: IpodTypography.description.copyWith(
+                      color: const Color(0xFF40566A))),
+              ],
+            )),
+          ]),
+          SizedBox(height: compact ? 5 : 10),
+          CupertinoButton(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 18),
+            onPressed: _loadStorage,
+            child: Text('Refresh', style: IpodTypography.metadata.copyWith(
+              color: const Color(0xFF172B3D), fontWeight: FontWeight.w700)),
           ),
         ],
-      ),
-    );
+      );
+    });
   }
 
-  Widget _storageFigure(BuildContext context, String value, String label) {
-    return Column(
-      children: [
-        Text(
-          value,
-          textAlign: TextAlign.center,
-          style: IpodTypography.title.copyWith(
-            fontSize: 19,
-            color: context.appPrimaryTextColor,
-          ),
-        ),
-        Text(
-          label,
-          style: IpodTypography.description.copyWith(
-            color: context.appSecondaryTextColor,
-          ),
-        ),
-      ],
-    );
-  }
+  Widget _storageFigure(String value, String label) => Column(
+        children: [
+          Text(value, textAlign: TextAlign.center,
+              style: IpodTypography.title.copyWith(
+                fontSize: 21, fontWeight: FontWeight.w700,
+                color: const Color(0xFF172B3D))),
+          Text(label, style: IpodTypography.description.copyWith(
+              color: const Color(0xFF40566A))),
+        ],
+      );
 
-  Widget _category(BuildContext context, Color color, String label, int bytes) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 9,
-              height: 9,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: IpodTypography.metadata.copyWith(
-                  color: context.appPrimaryTextColor,
-                ),
-              ),
-            ),
-          ],
+  Widget _usageBar(double ratio) => Container(
+        height: 25,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7FAFC),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFF91AFC4), width: 1.5),
+          boxShadow: const [BoxShadow(color: Color(0x55849DB0), blurRadius: 3, offset: Offset(0, 2))],
         ),
-        const SizedBox(height: 4),
-        Text(
-          _formatBytes(bytes),
-          style: IpodTypography.caption.copyWith(
-            color: context.appSecondaryTextColor,
-          ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(children: [
+            Align(alignment: Alignment.centerLeft, child: FractionallySizedBox(
+              widthFactor: ratio,
+              child: Container(decoration: const BoxDecoration(
+                gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                  colors: [Color(0xFF8BE0FF), Color(0xFF31B4F0), Color(0xFF087CCB)])),
+              ),
+            )),
+            Positioned(left: 0, right: 0, top: 2, height: 5,
+              child: DecoratedBox(decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [const Color(0x66FFFFFF), const Color(0x00FFFFFF)]),
+                borderRadius: BorderRadius.circular(20)))),
+          ]),
         ),
-      ],
-    );
-  }
+      );
+
+  Widget _category(Color color, String label, int bytes) => Column(
+        children: [
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Container(width: 11, height: 11,
+              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2),
+                boxShadow: const [BoxShadow(color: Color(0x33809AAA), blurRadius: 2, offset: Offset(0, 1))])),
+            const SizedBox(width: 5),
+            Flexible(child: Text(label, overflow: TextOverflow.ellipsis,
+              style: IpodTypography.metadata.copyWith(
+                color: const Color(0xFF172B3D), fontWeight: FontWeight.w700))),
+          ]),
+          const SizedBox(height: 5),
+          Text(_formatBytes(bytes), style: IpodTypography.caption.copyWith(
+            color: const Color(0xFF40566A))),
+        ],
+      );
 }
