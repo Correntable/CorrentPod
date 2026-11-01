@@ -120,7 +120,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         context.goNamed(Routes.language.name);
         break;
       case _SettingsDisplayItems.shuffle:
-        await ref.read(audioPlayerServiceProvider.notifier).toggleShuffleMode();
+        await ref.read(settingsPreferencesControllerProvider.notifier).toggleShuffleMode();
         break;
       case _SettingsDisplayItems.shuffleAlgorithm:
         await ref.read(shuffleAlgorithmProvider.notifier).toggle();
@@ -237,7 +237,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   ) {
     switch (settingsItem) {
       case _SettingsDisplayItems.shuffle:
-        return ref.watch(nowPlayingDetailsProvider).shuffleMode.title(context);
+        return settingsState.shuffleMode.title(context);
       case _SettingsDisplayItems.shuffleAlgorithm:
         return ref.watch(shuffleAlgorithmProvider).title;
       case _SettingsDisplayItems.smartVariation:
