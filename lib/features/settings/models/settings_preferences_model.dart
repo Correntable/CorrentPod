@@ -1,3 +1,4 @@
+import 'package:classipod/core/models/playback_shuffle_mode.dart';
 import 'package:classipod/features/settings/models/app_theme.dart';
 import 'package:classipod/features/settings/models/click_wheel_sensitivity.dart';
 import 'package:classipod/features/settings/models/click_wheel_size.dart';
@@ -13,6 +14,7 @@ class SettingsPreferencesModel {
   final ClickWheelSensitivity clickWheelSensitivity;
   final bool isTouchScreenEnabled;
   final RepeatMode repeatMode;
+  final PlaybackShuffleMode shuffleMode;
   final bool vibrate;
   final bool clickWheelSound;
   final VolumeMode volumeMode;
@@ -29,6 +31,7 @@ class SettingsPreferencesModel {
     required this.clickWheelSensitivity,
     required this.isTouchScreenEnabled,
     required this.repeatMode,
+    this.shuffleMode = PlaybackShuffleMode.off,
     required this.vibrate,
     required this.clickWheelSound,
     required this.volumeMode,
@@ -46,6 +49,7 @@ class SettingsPreferencesModel {
     ClickWheelSensitivity? clickWheelSensitivity,
     bool? isTouchScreenEnabled,
     RepeatMode? repeatMode,
+    PlaybackShuffleMode? shuffleMode,
     bool? vibrate,
     bool? clickWheelSound,
     VolumeMode? volumeMode,
@@ -63,6 +67,7 @@ class SettingsPreferencesModel {
           clickWheelSensitivity ?? this.clickWheelSensitivity,
       isTouchScreenEnabled: isTouchScreenEnabled ?? this.isTouchScreenEnabled,
       repeatMode: repeatMode ?? this.repeatMode,
+      shuffleMode: shuffleMode ?? this.shuffleMode,
       vibrate: vibrate ?? this.vibrate,
       clickWheelSound: clickWheelSound ?? this.clickWheelSound,
       volumeMode: volumeMode ?? this.volumeMode,
@@ -83,6 +88,7 @@ class SettingsPreferencesModel {
         other.clickWheelSensitivity == clickWheelSensitivity &&
         other.isTouchScreenEnabled == isTouchScreenEnabled &&
         other.repeatMode == repeatMode &&
+        other.shuffleMode == shuffleMode &&
         other.vibrate == vibrate &&
         other.clickWheelSound == clickWheelSound &&
         other.volumeMode == volumeMode &&
@@ -101,6 +107,7 @@ class SettingsPreferencesModel {
     clickWheelSensitivity,
     isTouchScreenEnabled,
     repeatMode,
+    shuffleMode,
     vibrate,
     clickWheelSound,
     volumeMode,
