@@ -18,11 +18,10 @@ final genreCountsProvider =
       final songs =
           ref.watch(filteredAudioFilesProvider).value ?? <MusicMetadata>[];
       for (final song in songs) {
-        final songArtists = (song.trackArtistNames ?? [])
+        final songArtists = song.albumArtistList
             .map((name) => name.trim().toLowerCase())
             .where((name) => name.isNotEmpty)
             .toSet();
-        if (songArtists.isEmpty) songArtists.add('unknown artist');
         for (final genre in song.genres) {
           artists.putIfAbsent(genre, () => {}).addAll(songArtists);
           albums.putIfAbsent(genre, () => {}).add(albumIdentityOf(song));
