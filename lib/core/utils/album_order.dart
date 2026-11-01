@@ -4,7 +4,7 @@ String albumIdentityOf(MusicMetadata metadata) {
   final albumName = metadata.getAlbumName.trim().toLowerCase();
   final primaryArtist = metadata.songId == null
       ? metadata.getPrimaryAlbumArtistName.trim().toLowerCase()
-      : (metadata.albumArtistNames ?? metadata.trackArtistNames ?? [])
+      : metadata.albumArtistList
             .map((name) => name.trim().toLowerCase())
             .join('\u0001');
   return metadata.isSubsonic
