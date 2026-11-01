@@ -121,7 +121,7 @@ class _SplitScreenPlaceholderState extends ConsumerState<SplitScreenPlaceholder>
         splitScreenWidget = IconPreviewWidget(
           titleText: 'Shuffle Type',
           icon: CupertinoIcons.shuffle,
-          contentText: '${algorithm.title}\n${algorithm.description}',
+          contentText: algorithm.description,
         );
       } else if (splitScreenType == SplitScreenType.smartVariation) {
         final algorithm = ref.watch(shuffleAlgorithmProvider);
@@ -129,8 +129,9 @@ class _SplitScreenPlaceholderState extends ConsumerState<SplitScreenPlaceholder>
         splitScreenWidget = IconPreviewWidget(
           titleText: 'Smart Variation',
           icon: CupertinoIcons.slider_horizontal_3,
-          contentText:
-              '${variation.title}\n${algorithm == ShuffleAlgorithm.smart ? variation.description : 'Only used with the Smart shuffle type.'}',
+                   contentText: algorithm == ShuffleAlgorithm.smart
+              ? variation.description
+              : 'Only used with the Smart shuffle type.',
         );
       } else if (splitScreenType == SplitScreenType.settings) {
         splitScreenWidget = const SettingsPreviewWidget();
