@@ -58,6 +58,10 @@ class LogicalQueue {
     index = initialIndex;
     _total = length;
     _queued.clear();
+    // A replacement queue is a new playback session: never carry the
+    // explored prefix from the queue that was playing before it.
+    _exploredOrder.clear();
+    _explored.clear();
     _order = List.generate(length, (index) => index);
     _albums =
         albums ??
@@ -170,6 +174,12 @@ class LogicalQueue {
   }
 
   void _reorder({bool keepCurrent = true}) {
+    // A shuffle explicitly started from the beginning must be free to
+    // reorder every track, including tracks explored in the previous order.
+    if (!keepCurrent) {
+      _exploredOrder.clear();
+      _explored.clear();
+    }
     final current = keepCurrent && _order.contains(index) ? index : null;
 
     final pending = <int>[];
