@@ -1,3 +1,4 @@
+import 'package:classipod/core/models/playback_shuffle_mode.dart';
 import 'package:classipod/core/constants/constants.dart';
 import 'package:classipod/core/models/shared_preference_keys.dart';
 import 'package:classipod/core/providers/shared_preferences_with_cache_provider.dart';
@@ -56,6 +57,24 @@ class SettingsPreferencesRepository {
           SharedPreferencesKeys.isTouchScreenEnabled.name,
         ) ??
         true;
+  }
+
+
+  PlaybackShuffleMode getShuffleMode() {
+    final value = _sharedPreferencesWithCache.getString(
+      SharedPreferencesKeys.shuffleMode.name,
+    );
+    for (final mode in PlaybackShuffleMode.values) {
+      if (mode.name == value) return mode;
+    }
+    return PlaybackShuffleMode.off;
+  }
+
+  Future<void> setShuffleMode(PlaybackShuffleMode mode) {
+    return _sharedPreferencesWithCache.setString(
+      SharedPreferencesKeys.shuffleMode.name,
+      mode.name,
+    );
   }
 
   String getRepeatMode() {
