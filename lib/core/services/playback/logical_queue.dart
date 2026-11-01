@@ -58,8 +58,6 @@ class LogicalQueue {
     index = initialIndex;
     _total = length;
     _queued.clear();
-    // A replacement queue is a new playback session: never carry the
-    // explored prefix from the queue that was playing before it.
     _exploredOrder.clear();
     _explored.clear();
     _order = List.generate(length, (index) => index);
@@ -169,13 +167,21 @@ class LogicalQueue {
     bool force = false,
   }) {
     if (shuffleMode == mode && !force) return;
+
+    // Entering song shuffle from an ordered/album queue starts a fresh mix
+    // of the whole playlist. Keep the current song as the anchor, but allow
+    // previously explored tracks to participate in the new shuffled tail.
+    if (mode == PlaybackShuffleMode.songs &&
+        shuffleMode != PlaybackShuffleMode.songs) {
+      _exploredOrder.clear();
+      _explored.clear();
+    }
+
     shuffleMode = mode;
     _reorder(keepCurrent: keepCurrent);
   }
 
   void _reorder({bool keepCurrent = true}) {
-    // A shuffle explicitly started from the beginning must be free to
-    // reorder every track, including tracks explored in the previous order.
     if (!keepCurrent) {
       _exploredOrder.clear();
       _explored.clear();
