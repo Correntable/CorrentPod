@@ -40,10 +40,7 @@ List<AlbumModel> buildAlbumDetails(Iterable<MusicMetadata> metadataList) {
   final albumDetails = albumsByIdentity.values.map((albumSongs) {
     final albumArtists = <String>{};
     for (final song in albumSongs) {
-      final artistNames = song.songId != null
-          ? song.albumArtistNames ?? song.trackArtistNames ?? []
-          : song.trackArtistNames ?? splitArtistNames(song.getAlbumArtistName);
-      albumArtists.addAll(artistNames);
+      albumArtists.addAll(song.albumArtistList);
     }
 
     final albumArtPath = albumSongs
