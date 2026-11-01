@@ -65,6 +65,41 @@ void main() {
     expect(queue.next(), 4);
   });
 
+  test('starting a fresh shuffle clears the previously explored prefix', () {
+    final queue = LogicalQueue(random: Random(42))
+      ..reset(8)
+      ..setShuffle(PlaybackShuffleMode.songs)
+      ..markExploredThrough(4);
+
+    expect(queue.explored, isNotEmpty);
+
+    queue.setShuffle(
+      PlaybackShuffleMode.songs,
+      keepCurrent: false,
+      force: true,
+    );
+
+    expect(queue.explored, isEmpty);
+    expect(queue.length, 8);
+    queue.index = queue.first!;
+    expect(remainingOrder(queue).toSet(), Set<int>.from(List.generate(8, (i) => i)));
+  });
+
+  test('replacing a queue clears exploration from the previous playlist', () {
+    final queue = LogicalQueue(random: Random(7))
+      ..reset(5)
+      ..markExploredThrough(3);
+
+    expect(queue.explored, isNotEmpty);
+
+    queue.reset(4);
+
+    expect(queue.explored, isEmpty);
+    expect(queue.length, 4);
+    expect(queue.first, inInclusiveRange(0, 3));
+    expect(queue.next(), isNotNull);
+  });
+
   test('album boundaries support previous, repeat one, and repeat all', () {
     final queue = LogicalQueue(random: Random(42))
       ..reset(
