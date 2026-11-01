@@ -8,6 +8,7 @@ import 'package:classipod/features/menu/controller/split_screen_controller.dart'
 import 'package:classipod/features/menu/models/split_screen_type.dart';
 import 'package:classipod/features/now_playing/provider/now_playing_details_provider.dart';
 import 'package:classipod/features/settings/controller/settings_preferences_controller.dart';
+import 'package:classipod/features/settings/controller/shuffle_algorithm_controller.dart';
 import 'package:classipod/features/settings/models/settings_preferences_model.dart';
 import 'package:classipod/features/settings/widgets/settings_list_tile.dart';
 import 'package:classipod/features/shake_shuffle/shake_shuffle.dart';
@@ -19,6 +20,8 @@ import 'package:url_launcher/url_launcher.dart';
 enum _SettingsDisplayItems {
   about,
   shuffle,
+  shuffleAlgorithm,
+  smartVariation,
   repeat,
   language,
   appTheme,
@@ -44,6 +47,10 @@ enum _SettingsDisplayItems {
         return context.localization.aboutScreenTitle;
       case shuffle:
         return context.localization.shuffleSettingTitle;
+      case shuffleAlgorithm:
+        return 'Shuffle Type';
+      case smartVariation:
+        return 'Smart Variation';
       case repeat:
         return context.localization.repeatModeSettingTitle;
       case language:
@@ -114,6 +121,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         break;
       case _SettingsDisplayItems.shuffle:
         await ref.read(audioPlayerServiceProvider.notifier).toggleShuffleMode();
+        break;
+      case _SettingsDisplayItems.shuffleAlgorithm:
+        await ref.read(shuffleAlgorithmProvider.notifier).toggle();
+        break;
+      case _SettingsDisplayItems.smartVariation:
+        await ref.read(smartVariationProvider.notifier).toggle();
         break;
       case _SettingsDisplayItems.repeat:
         await ref
@@ -225,6 +238,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     switch (settingsItem) {
       case _SettingsDisplayItems.shuffle:
         return ref.watch(nowPlayingDetailsProvider).shuffleMode.title(context);
+      case _SettingsDisplayItems.shuffleAlgorithm:
+        return ref.watch(shuffleAlgorithmProvider).title;
+      case _SettingsDisplayItems.smartVariation:
+        return ref.watch(smartVariationProvider).title;
       case _SettingsDisplayItems.deviceColor:
         return settingsState.deviceColor.title(context);
       case _SettingsDisplayItems.clickWheelSize:
