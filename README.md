@@ -11,14 +11,17 @@ I'm not a developer so I'm doing everything with Claude and for Android only. I'
 DONE
 - When the app is open and you lock the device, when you press the power button or any other method to wake up the screen, the app is already there, ready to be used. Everything else remains locked beneath the app. If the app was not open and you lock the phone, when tapping from the lockscreen on the Media Control Notification, the app will popup without unlocking.
 - "Play Next" and "Add to queue" feature, both for single songs and albums, with enhanced management of the index of the songs of the queue.
-- Shake to Shuffle
+- Shake to Shuffle (with an amazing starting sound)
 - Improve text encoding for better management of string with special characters
 - Artwork in the Now Playing screen are now tilted correctly also on the top side
 
 TO-DO
-- In the original Classipod, Shuffle Song or (now) Shake to Shuffle overwrite the "Shuffle" setting in the "Setting" screen. This cause the app to play in shuffle mode whaterver play list you might select. I'm trying to let the "Shuffle" setting to be indipendent from any launch of "Shuffle Song" so that you can choose how the app behave when launching a song from the Artist/Album menù   
+- In the original Classipod, Shuffle Song or (now) Shake to Shuffle overwrite the "Shuffle" setting in the "Setting" screen. This cause the app to play in shuffle mode whaterver play list you might select. I'm trying to let the "Shuffle" setting to be indipendent from any launch of "Shuffle Song" so that you can choose how the app behave when launching a song from the Artist/Album menu
 - New shuffle algorithm to try to be as much Smart Shuffle as we can
 - Cover Flow sorted by artist, then by album release year, then alphabetically, as in the old good Apple Cover Flow
+- Lockscreen behaviour described aboce as an option
+- New About screen
+- Better Now Playing texts positioning
 - Playlists
 - New icon
 
