@@ -329,6 +329,11 @@ class AudioPlayerServiceNotifier extends AsyncNotifier<void> {
         return;
       }
       final nowPlayingDetails = ref.read(nowPlayingDetailsProvider);
+      // Apply the persistent Settings choice whenever a track is launched
+      // from an album/artist view, without changing that preference itself.
+      await setShuffleMode(
+        ref.read(settingsPreferencesControllerProvider).shuffleMode,
+      );
 
       // If the album is already playing
       if (nowPlayingDetails.nowPlayingType == NowPlayingType.album &&
