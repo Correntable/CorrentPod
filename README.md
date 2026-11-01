@@ -12,7 +12,7 @@ I'm not a developer so I'm doing everything with Claude and for Android only. I'
 - "Play Next" and "Add to queue" feature, both for single songs and albums, with enhanced management of the index of the songs of the queue. (DONE)
 - Shake to Shuffle (DONE)
 - In the original Classipod, Shuffle Song or (now) Shake to Shuffle overwrite the "Shuffle" setting in the "Setting" screen. This cause the app to play in shuffle mode whaterver play list you might select. I'm trying to let the "Shuffle" setting to be indipendent from any launch of "Shuffle Song" so that you can choose how the app behave when launching a song from the Artist/Album menù   
-- New algorithm for Smart Shuffle
+- New shuffle algorithm to try to be as much Smart Shuffle as we can
 - Improved text encoding for better management of string with special characters
 - Cover Flow sorted by artist, then by album release year, then alphabetically, as in the old good Apple Cover Flow
 - Playlists
