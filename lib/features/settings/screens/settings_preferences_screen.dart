@@ -18,7 +18,6 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 enum _SettingsDisplayItems {
-  about,
   shuffle,
   shuffleAlgorithm,
   smartVariation,
@@ -39,12 +38,12 @@ enum _SettingsDisplayItems {
   showAppTutorial,
   librarySettings,
   resetSettings,
-  donate;
+  donate,
+  info,
+  about;
 
   String title(BuildContext context) {
     switch (this) {
-      case about:
-        return context.localization.aboutScreenTitle;
       case shuffle:
         return context.localization.shuffleSettingTitle;
       case shuffleAlgorithm:
@@ -87,6 +86,10 @@ enum _SettingsDisplayItems {
         return context.localization.resetSettingsTitle;
       case donate:
         return context.localization.donateSettingTitle;
+      case info:
+        return 'Info';
+      case about:
+        return context.localization.aboutScreenTitle;
     }
   }
 }
@@ -115,6 +118,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     switch (settingItem) {
       case _SettingsDisplayItems.about:
         context.goNamed(Routes.about.name);
+        break;
+      case _SettingsDisplayItems.info:
+        context.goNamed(Routes.info.name);
         break;
       case _SettingsDisplayItems.language:
         context.goNamed(Routes.language.name);
