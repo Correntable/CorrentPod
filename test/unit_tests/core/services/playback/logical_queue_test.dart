@@ -65,24 +65,24 @@ void main() {
     expect(queue.next(), 4);
   });
 
-  test('starting a fresh shuffle clears the previously explored prefix', () {
+  test('entering songs shuffle from off remixes the whole playlist', () {
     final queue = LogicalQueue(random: Random(42))
       ..reset(8)
-      ..setShuffle(PlaybackShuffleMode.songs)
-      ..markExploredThrough(4);
+      ..index = 3
+      ..markExploredThrough(3);
 
-    expect(queue.explored, isNotEmpty);
+    expect(queue.explored, [0, 1, 2, 3]);
 
-    queue.setShuffle(
-      PlaybackShuffleMode.songs,
-      keepCurrent: false,
-      force: true,
-    );
+    queue.setShuffle(PlaybackShuffleMode.songs);
 
+    expect(queue.index, 3);
+    expect(queue.position, 0);
     expect(queue.explored, isEmpty);
-    expect(queue.length, 8);
-    queue.index = queue.first!;
-    expect(remainingOrder(queue).toSet(), Set<int>.from(List.generate(8, (i) => i)));
+
+    final order = remainingOrder(queue);
+    expect(order.first, 3);
+    expect(order, hasLength(8));
+    expect(order.toSet(), Set<int>.from(List.generate(8, (i) => i)));
   });
 
   test('replacing a queue clears exploration from the previous playlist', () {
@@ -97,7 +97,23 @@ void main() {
     expect(queue.explored, isEmpty);
     expect(queue.length, 4);
     expect(queue.first, inInclusiveRange(0, 3));
-    expect(queue.next(), isNotNull);
+  });
+
+  test('shuffle from start clears the explored prefix', () {
+    final queue = LogicalQueue(random: Random(42))
+      ..reset(8)
+      ..index = 4
+      ..markExploredThrough(4);
+
+    queue.setShuffle(
+      PlaybackShuffleMode.songs,
+      keepCurrent: false,
+      force: true,
+    );
+
+    expect(queue.explored, isEmpty);
+    expect(queue.first, isNotNull);
+    expect(queue.length, 8);
   });
 
   test('album boundaries support previous, repeat one, and repeat all', () {
