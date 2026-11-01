@@ -18,6 +18,13 @@ enum ShuffleAlgorithm {
     lessRandom => 'Less Random',
     smart => 'Smart',
   };
+
+  /// Short text shown in the split screen preview.
+  String get description => switch (this) {
+    random => 'Completely random order.',
+    lessRandom => 'Random, but the same artist or album is not played in a row.',
+    smart => 'Songs of each artist are spread evenly across the queue.',
+  };
 }
 
 /// How much the smart shuffle is allowed to move a song away from its ideal,
@@ -37,5 +44,12 @@ enum SmartVariation {
     low => 'Low',
     medium => 'Medium',
     high => 'High',
+  };
+
+  /// Short text shown in the split screen preview.
+  String get description => switch (this) {
+    low => 'Very even spacing between songs of the same artist.',
+    medium => 'Even spacing with some variety.',
+    high => 'Looser spacing, closer to random.',
   };
 }
