@@ -13,6 +13,7 @@ import 'package:classipod/features/music/playlist/models/playlist_model.dart';
 import 'package:classipod/features/now_playing/models/now_playing_model.dart';
 import 'package:classipod/features/now_playing/provider/now_playing_details_provider.dart';
 import 'package:classipod/features/settings/controller/settings_preferences_controller.dart';
+import 'package:classipod/features/settings/controller/shuffle_algorithm_controller.dart';
 import 'package:classipod/features/settings/widgets/subsonic_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,6 +39,13 @@ final libraryAudioHandlerProvider = Provider<LibraryAudioHandler>((ref) {
       return ref.read(subsonicControllerProvider.notifier).resolve(song);
     },
   );
+  void applyShuffleSettings() => handler.configureShuffle(
+    ref.read(shuffleAlgorithmProvider),
+    ref.read(smartVariationProvider).jitter,
+  );
+  applyShuffleSettings();
+  ref.listen(shuffleAlgorithmProvider, (_, _) => applyShuffleSettings());
+  ref.listen(smartVariationProvider, (_, _) => applyShuffleSettings());
   ref.listen(
     subsonicControllerProvider.select(
       (value) => (value.value?.enabled, value.value?.config?.id),
