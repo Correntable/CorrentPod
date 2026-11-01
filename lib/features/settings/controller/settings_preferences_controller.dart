@@ -1,3 +1,4 @@
+import 'package:classipod/core/models/playback_shuffle_mode.dart';
 import 'dart:async';
 import 'dart:io' as io;
 
@@ -58,6 +59,7 @@ class SettingsPreferencesControllerNotifier
       ),
       isTouchScreenEnabled: settingsPreferencesRepository
           .getTouchScreenEnabled(),
+      shuffleMode: settingsPreferencesRepository.getShuffleMode(),
       repeatMode: RepeatMode.values.byName(
         settingsPreferencesRepository.getRepeatMode(),
       ),
@@ -229,6 +231,13 @@ class SettingsPreferencesControllerNotifier
         );
   }
 
+
+  Future<void> toggleShuffleMode() async {
+    final mode = state.shuffleMode.next;
+    state = state.copyWith(shuffleMode: mode);
+    await ref.read(settingsPreferencesRepositoryProvider).setShuffleMode(mode);
+  }
+
   Future<void> toggleRepeatMode() async {
     switch (state.repeatMode) {
       case RepeatMode.off:
@@ -364,6 +373,7 @@ class SettingsPreferencesControllerNotifier
     await ref
         .read(settingsPreferencesRepositoryProvider)
         .setRepeatMode(repeatModeName: RepeatMode.off.name);
+    await ref.read(settingsPreferencesRepositoryProvider).setShuffleMode(PlaybackShuffleMode.off);
     await ref
         .read(settingsPreferencesRepositoryProvider)
         .setVibrate(isVibrateEnabled: true);
