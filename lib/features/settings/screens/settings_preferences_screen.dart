@@ -305,6 +305,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         ref.read(splitScreenControllerProvider.notifier).changeSplitScreenType =
             SplitScreenType.shuffle;
         break;
+      case _SettingsDisplayItems.shuffleAlgorithm:
+        ref.read(splitScreenControllerProvider.notifier).changeSplitScreenType =
+            SplitScreenType.shuffleAlgorithm;
+        break;
+      case _SettingsDisplayItems.smartVariation:
+        ref.read(splitScreenControllerProvider.notifier).changeSplitScreenType =
+            SplitScreenType.smartVariation;
+        break;
       case _SettingsDisplayItems.repeat:
         ref.read(splitScreenControllerProvider.notifier).changeSplitScreenType =
             SplitScreenType.repeat;
