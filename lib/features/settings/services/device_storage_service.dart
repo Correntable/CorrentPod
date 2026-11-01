@@ -5,11 +5,15 @@ class DeviceStorageInfo {
     required this.totalBytes,
     required this.availableBytes,
     required this.audioBytes,
+    required this.videoBytes,
+    required this.photoBytes,
   });
 
   final int totalBytes;
   final int availableBytes;
   final int audioBytes;
+  final int videoBytes;
+  final int photoBytes;
 
   int get usedBytes => (totalBytes - availableBytes).clamp(0, totalBytes);
   int get otherBytes => (usedBytes - audioBytes).clamp(0, usedBytes);
@@ -19,6 +23,8 @@ class DeviceStorageInfo {
       totalBytes: (map['totalBytes'] as num).toInt(),
       availableBytes: (map['availableBytes'] as num).toInt(),
       audioBytes: (map['audioBytes'] as num?)?.toInt() ?? 0,
+      videoBytes: (map['videoBytes'] as num?)?.toInt() ?? 0,
+      photoBytes: (map['photoBytes'] as num?)?.toInt() ?? 0,
     );
   }
 }
