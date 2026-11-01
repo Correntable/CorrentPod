@@ -318,6 +318,18 @@ class MusicMetadata extends HiveObject {
     return artistNames.isEmpty ? "Unknown Album Artist" : artistNames.first;
   }
 
+    /// Album artists only: track artists are ignored.
+  /// Falls back to "Unknown Artist" when no album artist is present.
+  List<String> get albumArtistList {
+    final names = (albumArtistNames ?? <String>[])
+        .map((name) => name.trim())
+        .where((name) => name.isNotEmpty)
+        .toList();
+    if (names.isNotEmpty) return names;
+    final single = albumArtistName?.trim();
+    return single == null || single.isEmpty ? ['Unknown Artist'] : [single];
+  }
+
   int get getTrackNumber {
     return trackNumber ?? 0;
   }
