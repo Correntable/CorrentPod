@@ -19,7 +19,7 @@
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
         <activity
-            android:name="com.ryanheise.audioservice.AudioServiceActivity"
+            android:name="com.adeeteya.classipod.MainActivity"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
             android:exported="true"
