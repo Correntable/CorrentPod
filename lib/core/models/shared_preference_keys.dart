@@ -5,6 +5,7 @@ enum SharedPreferencesKeys {
   clickWheelSensitivity,
   isTouchScreenEnabled,
   repeatMode,
+  shuffleMode,
   vibrate,
   clickWheelSound,
   volumeMode,
