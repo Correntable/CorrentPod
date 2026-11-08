@@ -8,7 +8,6 @@ enum SplitScreenType {
   missingTracks,
   shuffle,
   shuffleAlgorithm,
-  smartVariation,
   nowPlaying,
   sleepTimer,
   language,
