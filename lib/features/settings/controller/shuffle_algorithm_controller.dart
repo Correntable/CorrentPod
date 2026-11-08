@@ -15,31 +15,10 @@ class ShuffleAlgorithmNotifier extends Notifier<ShuffleAlgorithm> {
   ShuffleAlgorithm build() {
     final prefs = ref.watch(sharedPreferencesWithCacheProvider).value;
     final name = prefs?.getString(_key);
-    return ShuffleAlgorithm.values.asNameMap()[name] ?? ShuffleAlgorithm.random;
-  }
-
-  Future<void> toggle() async {
-    final next = state.next;
-    state = next;
-    final prefs = ref.read(sharedPreferencesWithCacheProvider).value;
-    await prefs?.setString(_key, next.name);
-  }
-}
-
-/// Setting: how far the smart shuffle may move songs from their even position.
-final smartVariationProvider =
-    NotifierProvider<SmartVariationNotifier, SmartVariation>(
-      SmartVariationNotifier.new,
-    );
-
-class SmartVariationNotifier extends Notifier<SmartVariation> {
-  static const _key = 'smartVariation';
-
-  @override
-  SmartVariation build() {
-    final prefs = ref.watch(sharedPreferencesWithCacheProvider).value;
-    final name = prefs?.getString(_key);
-    return SmartVariation.values.asNameMap()[name] ?? SmartVariation.medium;
+    // Values saved by older versions ("lessRandom", "smart") do not exist any
+    // more and fall back to the balanced default.
+    return ShuffleAlgorithm.values.asNameMap()[name] ??
+        ShuffleAlgorithm.balanced;
   }
 
   Future<void> toggle() async {
