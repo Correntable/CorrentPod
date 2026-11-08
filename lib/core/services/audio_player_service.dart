@@ -39,13 +39,10 @@ final libraryAudioHandlerProvider = Provider<LibraryAudioHandler>((ref) {
       return ref.read(subsonicControllerProvider.notifier).resolve(song);
     },
   );
-  void applyShuffleSettings() => handler.configureShuffle(
-    ref.read(shuffleAlgorithmProvider),
-    ref.read(smartVariationProvider).jitter,
-  );
+  void applyShuffleSettings() =>
+      handler.configureShuffle(ref.read(shuffleAlgorithmProvider));
   applyShuffleSettings();
   ref.listen(shuffleAlgorithmProvider, (_, _) => applyShuffleSettings());
-  ref.listen(smartVariationProvider, (_, _) => applyShuffleSettings());
   ref.listen(
     subsonicControllerProvider.select(
       (value) => (value.value?.enabled, value.value?.config?.id),
