@@ -20,7 +20,6 @@ import 'package:url_launcher/url_launcher.dart';
 enum _SettingsDisplayItems {
   shuffle,
   shuffleAlgorithm,
-  smartVariation,
   repeat,
   language,
   appTheme,
@@ -48,8 +47,6 @@ enum _SettingsDisplayItems {
         return context.localization.shuffleSettingTitle;
       case shuffleAlgorithm:
         return 'Shuffle Type';
-      case smartVariation:
-        return 'Smart Variation';
       case repeat:
         return context.localization.repeatModeSettingTitle;
       case language:
@@ -130,9 +127,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         break;
       case _SettingsDisplayItems.shuffleAlgorithm:
         await ref.read(shuffleAlgorithmProvider.notifier).toggle();
-        break;
-      case _SettingsDisplayItems.smartVariation:
-        await ref.read(smartVariationProvider.notifier).toggle();
         break;
       case _SettingsDisplayItems.repeat:
         await ref
@@ -246,8 +240,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         return settingsState.shuffleMode.title(context);
       case _SettingsDisplayItems.shuffleAlgorithm:
         return ref.watch(shuffleAlgorithmProvider).title;
-      case _SettingsDisplayItems.smartVariation:
-        return ref.watch(smartVariationProvider).title;
       case _SettingsDisplayItems.deviceColor:
         return settingsState.deviceColor.title(context);
       case _SettingsDisplayItems.clickWheelSize:
@@ -314,10 +306,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       case _SettingsDisplayItems.shuffleAlgorithm:
         ref.read(splitScreenControllerProvider.notifier).changeSplitScreenType =
             SplitScreenType.shuffleAlgorithm;
-        break;
-      case _SettingsDisplayItems.smartVariation:
-        ref.read(splitScreenControllerProvider.notifier).changeSplitScreenType =
-            SplitScreenType.smartVariation;
         break;
       case _SettingsDisplayItems.repeat:
         ref.read(splitScreenControllerProvider.notifier).changeSplitScreenType =
