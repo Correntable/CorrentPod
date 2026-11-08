@@ -20,7 +20,7 @@ DONE
 
 TO-DO
 - Cover Flow sorted by artist, then by album release year, then alphabetically, as in the old good Apple Cover Flow
-- Lockscreen behaviour described aboce as an option
+- Lockscreen behaviour described above as an option
 - New About screen
 - Better Now Playing texts positioning
 - Playlists
