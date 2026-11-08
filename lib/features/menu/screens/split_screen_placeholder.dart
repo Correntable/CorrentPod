@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:classipod/core/extensions/build_context_extensions.dart';
-import 'package:classipod/core/models/shuffle_algorithm.dart';
 import 'package:classipod/core/subsonic/subsonic_controller.dart';
 import 'package:classipod/features/menu/controller/split_screen_controller.dart';
 import 'package:classipod/features/menu/models/split_screen_type.dart';
@@ -122,16 +121,6 @@ class _SplitScreenPlaceholderState extends ConsumerState<SplitScreenPlaceholder>
           titleText: 'Shuffle Type',
           icon: CupertinoIcons.shuffle,
           contentText: algorithm.description,
-        );
-      } else if (splitScreenType == SplitScreenType.smartVariation) {
-        final algorithm = ref.watch(shuffleAlgorithmProvider);
-        final variation = ref.watch(smartVariationProvider);
-        splitScreenWidget = IconPreviewWidget(
-          titleText: 'Smart Variation',
-          icon: CupertinoIcons.slider_horizontal_3,
-                   contentText: algorithm == ShuffleAlgorithm.smart
-              ? variation.description
-              : 'Only used with the Smart shuffle type.',
         );
       } else if (splitScreenType == SplitScreenType.settings) {
         splitScreenWidget = const SettingsPreviewWidget();
