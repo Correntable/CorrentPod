@@ -512,8 +512,8 @@ class LibraryAudioHandler extends BaseAudioHandler {
   /// Applies the shuffle algorithm chosen in the settings. When the songs
   /// shuffle is active the queue is mixed again (current song and songs queued
   /// by the user stay where they are).
-  void configureShuffle(ShuffleAlgorithm algorithm, double jitter) {
-    final reorder = logicalQueue.configureShuffle(algorithm, jitter);
+  void configureShuffle(ShuffleAlgorithm algorithm) {
+    final reorder = logicalQueue.configureShuffle(algorithm);
     if (!reorder ||
         _songs.isEmpty ||
         logicalQueue.shuffleMode != PlaybackShuffleMode.songs) {

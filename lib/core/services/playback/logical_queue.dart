@@ -29,10 +29,7 @@ class LogicalQueue {
   LoopMode loopMode = LoopMode.off;
 
   /// How the songs are mixed when [shuffleMode] is songs.
-  ShuffleAlgorithm shuffleAlgorithm = ShuffleAlgorithm.random;
-
-  /// Deviation allowed to the smart shuffle (see [SmartVariation]).
-  double smartJitter = SmartVariation.medium.jitter;
+  ShuffleAlgorithm shuffleAlgorithm = ShuffleAlgorithm.balanced;
 
   /// Artist key of every song (null = unknown) and album id of every song.
   List<String?> _artists = [];
@@ -93,12 +90,9 @@ class LogicalQueue {
 
   /// Sets the algorithm used by the songs shuffle. Returns true when the
   /// current order has to be shuffled again to apply the change.
-  bool configureShuffle(ShuffleAlgorithm algorithm, double jitter) {
-    final reorder =
-        algorithm != shuffleAlgorithm ||
-        (algorithm == ShuffleAlgorithm.smart && jitter != smartJitter);
+  bool configureShuffle(ShuffleAlgorithm algorithm) {
+    final reorder = algorithm != shuffleAlgorithm;
     shuffleAlgorithm = algorithm;
-    smartJitter = jitter;
     return reorder;
   }
 
@@ -222,7 +216,6 @@ class LogicalQueue {
               artistOf: _artistOf,
               albumOf: _albumOf,
               random: random,
-              jitter: smartJitter,
             ),
           ];
         }
